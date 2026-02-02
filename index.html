@@ -1017,7 +1017,26 @@ function doGet(e) {
                     </div>
 
                     <div id="results-${index}" style="display: none;">
-                        <label>Mark Results (Click each item):</label>
+                        <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px solid #667eea;">
+                            <p style="font-size: 13px; color: #4338ca; margin-bottom: 8px;"><strong>Quick Select:</strong></p>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                                <button onclick="selectRange(${index}, 'all-pass')" style="padding: 8px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">All Pass ✓</button>
+                                <button onclick="selectRange(${index}, 'all-fail')" style="padding: 8px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">All Fail ✗</button>
+                                <button onclick="clearSelection(${index})" style="padding: 8px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Clear</button>
+                            </div>
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #c7d2fe;">
+                                <p style="font-size: 12px; color: #4338ca; margin-bottom: 6px;"><strong>Select Range:</strong></p>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <input type="number" id="range-from-${index}" placeholder="From" min="1" style="flex: 1; padding: 6px; border: 1px solid #c7d2fe; border-radius: 4px; font-size: 13px;">
+                                    <span style="color: #6b7280;">to</span>
+                                    <input type="number" id="range-to-${index}" placeholder="To" min="1" style="flex: 1; padding: 6px; border: 1px solid #c7d2fe; border-radius: 4px; font-size: 13px;">
+                                    <button onclick="selectRange(${index}, 'pass')" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Pass</button>
+                                    <button onclick="selectRange(${index}, 'fail')" style="padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Fail</button>
+                                </div>
+                            </div>
+                            <p style="font-size: 11px; color: #6b7280; margin-top: 8px;">💡 Tip: Hold Shift and click two items to select range</p>
+                        </div>
+                        <label>Mark Results (Click or Shift+Click for range):</label>
                         <div class="result-buttons" id="result-buttons-${index}"></div>
                     </div>
 
@@ -1038,6 +1057,8 @@ function doGet(e) {
             updateProgress();
         }
 
+        let lastClickedButton = {};
+
         function updateResultButtons(checkIndex) {
             const qty = parseInt(document.getElementById(`qty-${checkIndex}`).value) || 0;
             const resultsDiv = document.getElementById(`results-${checkIndex}`);
@@ -1051,37 +1072,126 @@ function doGet(e) {
                     const btn = document.createElement('button');
                     btn.className = 'result-btn';
                     btn.textContent = i + 1;
-                    btn.onclick = function() {
-                        toggleResult(checkIndex, i);
+                    btn.dataset.index = i;
+                    btn.onclick = function(e) {
+                        toggleResult(checkIndex, i, e.shiftKey);
                     };
                     buttonsDiv.appendChild(btn);
                 }
 
                 currentInspection.checkResults[checkIndex].checkedQty = qty;
                 currentInspection.checkResults[checkIndex].results = new Array(qty).fill('pending');
+                lastClickedButton[checkIndex] = null;
+                
+                // Set max values for range inputs
+                document.getElementById(`range-from-${checkIndex}`).max = qty;
+                document.getElementById(`range-to-${checkIndex}`).max = qty;
             } else {
                 resultsDiv.style.display = 'none';
             }
             updateProgress();
         }
 
-        function toggleResult(checkIndex, itemIndex) {
+        function toggleResult(checkIndex, itemIndex, shiftKey) {
             const btn = document.getElementById(`result-buttons-${checkIndex}`).children[itemIndex];
-            const currentResult = currentInspection.checkResults[checkIndex].results[itemIndex];
             
-            if (currentResult === 'pending') {
-                currentInspection.checkResults[checkIndex].results[itemIndex] = 'pass';
-                btn.classList.add('pass');
-                btn.classList.remove('fail');
-            } else if (currentResult === 'pass') {
-                currentInspection.checkResults[checkIndex].results[itemIndex] = 'fail';
-                btn.classList.remove('pass');
-                btn.classList.add('fail');
+            // Handle shift-click range selection
+            if (shiftKey && lastClickedButton[checkIndex] !== null && lastClickedButton[checkIndex] !== itemIndex) {
+                const start = Math.min(lastClickedButton[checkIndex], itemIndex);
+                const end = Math.max(lastClickedButton[checkIndex], itemIndex);
+                const firstState = currentInspection.checkResults[checkIndex].results[lastClickedButton[checkIndex]];
+                
+                // Apply same state to range
+                for (let i = start; i <= end; i++) {
+                    const rangeBtn = document.getElementById(`result-buttons-${checkIndex}`).children[i];
+                    if (firstState === 'pending') {
+                        currentInspection.checkResults[checkIndex].results[i] = 'pass';
+                        rangeBtn.classList.add('pass');
+                        rangeBtn.classList.remove('fail');
+                    } else {
+                        currentInspection.checkResults[checkIndex].results[i] = firstState;
+                        if (firstState === 'pass') {
+                            rangeBtn.classList.add('pass');
+                            rangeBtn.classList.remove('fail');
+                        } else {
+                            rangeBtn.classList.add('fail');
+                            rangeBtn.classList.remove('pass');
+                        }
+                    }
+                }
             } else {
-                currentInspection.checkResults[checkIndex].results[itemIndex] = 'pending';
-                btn.classList.remove('pass', 'fail');
+                // Normal single click toggle
+                const currentResult = currentInspection.checkResults[checkIndex].results[itemIndex];
+                
+                if (currentResult === 'pending') {
+                    currentInspection.checkResults[checkIndex].results[itemIndex] = 'pass';
+                    btn.classList.add('pass');
+                    btn.classList.remove('fail');
+                } else if (currentResult === 'pass') {
+                    currentInspection.checkResults[checkIndex].results[itemIndex] = 'fail';
+                    btn.classList.remove('pass');
+                    btn.classList.add('fail');
+                } else {
+                    currentInspection.checkResults[checkIndex].results[itemIndex] = 'pending';
+                    btn.classList.remove('pass', 'fail');
+                }
             }
+            
+            lastClickedButton[checkIndex] = itemIndex;
+            updateFailItems(checkIndex);
+            updateProgress();
+        }
 
+        function selectRange(checkIndex, action) {
+            const buttonsDiv = document.getElementById(`result-buttons-${checkIndex}`);
+            const buttons = buttonsDiv.children;
+            
+            if (action === 'all-pass') {
+                for (let i = 0; i < buttons.length; i++) {
+                    currentInspection.checkResults[checkIndex].results[i] = 'pass';
+                    buttons[i].classList.add('pass');
+                    buttons[i].classList.remove('fail');
+                }
+            } else if (action === 'all-fail') {
+                for (let i = 0; i < buttons.length; i++) {
+                    currentInspection.checkResults[checkIndex].results[i] = 'fail';
+                    buttons[i].classList.add('fail');
+                    buttons[i].classList.remove('pass');
+                }
+            } else if (action === 'pass' || action === 'fail') {
+                const from = parseInt(document.getElementById(`range-from-${checkIndex}`).value) || 1;
+                const to = parseInt(document.getElementById(`range-to-${checkIndex}`).value) || buttons.length;
+                
+                if (from < 1 || to > buttons.length || from > to) {
+                    alert('Invalid range! Please enter valid item numbers.');
+                    return;
+                }
+                
+                for (let i = from - 1; i < to; i++) {
+                    currentInspection.checkResults[checkIndex].results[i] = action;
+                    if (action === 'pass') {
+                        buttons[i].classList.add('pass');
+                        buttons[i].classList.remove('fail');
+                    } else {
+                        buttons[i].classList.add('fail');
+                        buttons[i].classList.remove('pass');
+                    }
+                }
+            }
+            
+            updateFailItems(checkIndex);
+            updateProgress();
+        }
+
+        function clearSelection(checkIndex) {
+            const buttonsDiv = document.getElementById(`result-buttons-${checkIndex}`);
+            const buttons = buttonsDiv.children;
+            
+            for (let i = 0; i < buttons.length; i++) {
+                currentInspection.checkResults[checkIndex].results[i] = 'pending';
+                buttons[i].classList.remove('pass', 'fail');
+            }
+            
             updateFailItems(checkIndex);
             updateProgress();
         }
