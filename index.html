@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="QC Inspect">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23667eea' width='100' height='100'/%3E%3Ctext y='70' x='50' text-anchor='middle' font-size='60' fill='white'%3E✓%3C/text%3E%3C/svg%3E">
+    <title>Quality Inspection App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .settings-icon:hover {
+            opacity: 1;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .check-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .check-item.completed {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .check-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .check-id {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .check-spec {
+            color: #666;
+            font-size: 14px;
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .quantity-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+        }
+
+        .quantity-input input {
+            flex: 1;
+        }
+
+        .result-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .result-btn {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .result-btn.pass {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .result-btn.fail {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+
+        .fail-section {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .fail-section.active {
+            display: block;
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .summary {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .checkbox-group {
+            margin: 15px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-item.checked {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+
+        .setup-instructions {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #f59e0b;
+        }
+
+        .setup-instructions h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        .setup-instructions p {
+            color: #78350f;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .setup-instructions code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .install-btn {
+            background: #10b981;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="settings-icon" onclick="showSettingsModal()">⚙️</div>
+            <h1>Quality Inspection</h1>
+            <p>Form No: CMU-FO-03 | Rev.No: 00</p>
+        </div>
+
+        <div class="content">
+            <!-- Screen 1: Start -->
+            <div class="screen active" id="screen-start">
+                <div id="not-configured-warning" class="alert alert-warning" style="display: none;">
+                    <h3>⚠️ Setup Required</h3>
+                    <p>This app is not configured yet. Please contact your administrator.</p>
+                </div>
+                <button class="btn btn-primary" onclick="startInspection()">Start Inspection</button>
+                
+                <!-- Install PWA Button -->
+                <button class="install-btn" id="install-btn" style="display: none;">
+                    <span>📱</span>
+                    <span>Install App on Device</span>
+                </button>
+            </div>
+
+            <!-- Screen 2: Data Entry -->
+            <div class="screen" id="screen-data-entry">
+                <h2 style="margin-bottom: 20px;">Inspection Details</h2>
+                
+                <div class="form-group">
+                    <label>Schedule No</label>
+                    <input type="text" id="schedule-no" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Part No</label>
+                    <input type="text" id="part-no" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Operator Name</label>
+                    <input type="text" id="operator-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Inspector Name</label>
+                    <input type="text" id="inspector-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Station</label>
+                    <select id="station" onchange="updateSubstation()">
+                        <option value="">Select Station</option>
+                        <option value="INNER CUTTING">INNER CUTTING</option>
+                        <option value="OUTER CUTTING">OUTER CUTTING</option>
+                        <option value="SLEEVE CUTTING">SLEEVE CUTTING</option>
+                        <option value="GLUING">GLUING</option>
+                        <option value="HEAT EMBORSING">HEAT EMBORSING</option>
+                        <option value="SWAGING">SWAGING</option>
+                        <option value="ASSEMBLY">ASSEMBLY</option>
+                        <option value="MANUAL BUMPING">MANUAL BUMPING</option>
+                        <option value="DIE CASTING">DIE CASTING</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Substation (Optional)</label>
+                    <input type="text" id="substation">
+                </div>
+
+                <div class="form-group">
+                    <label>Select Check Codes (Multiple allowed)</label>
+                    <div class="checkbox-group" id="check-codes"></div>
+                </div>
+
+                <button class="btn btn-primary" onclick="startQualityCheck()">Continue to Quality Check</button>
+                <button class="btn btn-secondary" onclick="goToStart()">Cancel</button>
+            </div>
+
+            <!-- Screen 3: Quality Check -->
+            <div class="screen" id="screen-quality-check">
+                <h2 style="margin-bottom: 10px;">Quality Check</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <p style="text-align: center; color: #666; margin-bottom: 20px;" id="progress-text">0 of 0 completed</p>
+
+                <div id="checks-container"></div>
+
+                <button class="btn btn-success" onclick="submitInspection()" id="submit-btn" style="display: none;">Submit Inspection</button>
+                <button class="btn btn-secondary" onclick="goToDataEntry()">Back</button>
+            </div>
+
+            <!-- Screen 4: Success -->
+            <div class="screen" id="screen-success">
+                <div class="alert alert-success">
+                    <h3 style="margin-bottom: 10px;">✓ Inspection Submitted Successfully!</h3>
+                    <p>Your inspection data and photos have been saved.</p>
+                    <p style="margin-top: 10px; font-weight: 600;" id="inspection-id-display"></p>
+                </div>
+
+                <div class="summary" id="inspection-summary"></div>
+
+                <button class="btn btn-primary" onclick="startNewInspection(); showScreen('screen-start');">Start New Inspection</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
+            <div class="modal-header">⚙️ Admin Settings</div>
+            
+            <div class="form-group">
+                <label>Admin Password</label>
+                <input type="password" id="admin-password" placeholder="Enter admin password">
+            </div>
+
+            <div id="settings-content" style="display: none;">
+                <div class="alert alert-success" style="margin-bottom: 20px;">
+                    <p>✓ Password correct. You can now configure the app.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Google Sheets Web App URL</label>
+                    <input type="text" id="sheet-url-input" placeholder="https://script.google.com/macros/s/...">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">This is the deployment URL from Google Apps Script</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+                
+                <h3 style="margin-bottom: 15px;">Setup Instructions</h3>
+                <button class="btn btn-secondary" onclick="showSetupInstructions()">View Setup Guide</button>
+            </div>
+
+            <button class="btn btn-primary" onclick="checkPassword()" id="check-password-btn">Unlock Settings</button>
+        </div>
+    </div>
+
+    <!-- Setup Instructions Modal -->
+    <div class="modal" id="setup-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeSetupModal()">&times;</span>
+            <div class="modal-header">📋 Setup Guide</div>
+            
+            <div class="setup-instructions">
+                <h3>Step 1: Create Google Sheet</h3>
+                <p>1. Go to Google Sheets and create a new spreadsheet</p>
+                <p>2. Name it "Quality Inspections"</p>
+                <p>3. The script will automatically create these sheets:</p>
+                <p style="margin-left: 20px;">• <strong>All Inspections</strong> - Complete history</p>
+                <p style="margin-left: 20px;">• <strong>2026-02 Inspections</strong> - Current month (auto-created)</p>
+                <p style="margin-left: 20px;">• <strong>Failed Items</strong> - Detailed fail records</p>
+            </div>
+
+            <div class="setup-instructions">
+                <h3>Step 2: Add Apps Script</h3>
+                <p>1. In your Google Sheet, click <strong>Extensions → Apps Script</strong></p>
+                <p>2. Delete any existing code</p>
+                <p>3. Copy and paste the code below:</p>
+                <textarea id="apps-script-code" readonly style="height: 400px; font-family: monospace; font-size: 11px; margin-top: 10px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  try {
+    var jsonString = e.postData ? e.postData.contents : e.parameter.data;
+    if (!jsonString) {
+      jsonString = e.postData.getDataAsString();
+    }
+    var data = JSON.parse(jsonString);
+    
+    var timestamp = new Date();
+    var monthKey = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'yyyy-MM');
+    var inspectionId = 'INS-' + Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'yyyyMMdd-HHmmss');
+    
+    // Get or create All Inspections sheet
+    var allSheet = ss.getSheetByName('All Inspections');
+    if (!allSheet) {
+      allSheet = ss.insertSheet('All Inspections');
+      allSheet.appendRow(['Inspection ID', 'Timestamp', 'Schedule No', 'Part No', 'Operator Name', 'Inspector Name', 'Station', 'Substation', 'Total Checks', 'Total Passed', 'Total Failed']);
+    }
+    
+    // Get or create Monthly sheet
+    var monthSheet = ss.getSheetByName(monthKey + ' Inspections');
+    if (!monthSheet) {
+      monthSheet = ss.insertSheet(monthKey + ' Inspections');
+      monthSheet.appendRow(['Inspection ID', 'Timestamp', 'Schedule No', 'Part No', 'Operator Name', 'Inspector Name', 'Station', 'Substation', 'Total Checks', 'Total Passed', 'Total Failed']);
+    }
+    
+    // Get or create Failed Items sheet
+    var failSheet = ss.getSheetByName('Failed Items');
+    if (!failSheet) {
+      failSheet = ss.insertSheet('Failed Items');
+      failSheet.appendRow(['Inspection ID', 'Failed Item ID', 'Month', 'Timestamp', 'Check ID', 'Check Description', 'Specification', 'Failed Item #', 'Fail Description', 'Photo Link']);
+    }
+    
+    // Calculate totals
+    var totalPassed = 0;
+    var totalFailed = 0;
+    var totalChecks = data.checks.length;
+    
+    data.checks.forEach(function(check) {
+      totalPassed += check.pass;
+      totalFailed += check.fail;
+    });
+    
+    // Add to All Inspections
+    allSheet.appendRow([
+      inspectionId,
+      timestamp,
+      data.scheduleNo,
+      data.partNo,
+      data.operatorName,
+      data.inspectorName,
+      data.station,
+      data.substation,
+      totalChecks,
+      totalPassed,
+      totalFailed
+    ]);
+    
+    // Add to Monthly sheet
+    monthSheet.appendRow([
+      inspectionId,
+      timestamp,
+      data.scheduleNo,
+      data.partNo,
+      data.operatorName,
+      data.inspectorName,
+      data.station,
+      data.substation,
+      totalChecks,
+      totalPassed,
+      totalFailed
+    ]);
+    
+    // Get or create Photos folder
+    var folder;
+    try {
+      var folders = DriveApp.getFoldersByName('Quality Inspection Photos');
+      if (folders.hasNext()) {
+        folder = folders.next();
+      } else {
+        folder = DriveApp.createFolder('Quality Inspection Photos');
+      }
+    } catch (driveError) {
+      folder = null;
+    }
+    
+    // Add failed items
+    var failCounter = 1;
+    for (var i = 0; i < data.checks.length; i++) {
+      var check = data.checks[i];
+      
+      if (check.failedItems && check.failedItems.length > 0) {
+        for (var j = 0; j < check.failedItems.length; j++) {
+          var failItem = check.failedItems[j];
+          var failItemId = inspectionId + '-F' + failCounter;
+          failCounter++;
+          
+          var photoLink = '';
+          if (failItem.photo && folder) {
+            try {
+              var base64Data = failItem.photo.replace(/^data:image\/\w+;base64,/, '');
+              var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), 'image/jpeg', failItemId + '.jpg');
+              var file = folder.createFile(blob);
+              file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+              photoLink = file.getUrl();
+            } catch (photoError) {
+              photoLink = 'Upload failed';
+            }
+          }
+          
+          failSheet.appendRow([
+            inspectionId,
+            failItemId,
+            monthKey,
+            timestamp,
+            check.id,
+            check.check,
+            check.specification,
+            failItem.itemNumber,
+            failItem.description || '',
+            photoLink
+          ]);
+        }
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      inspectionId: inspectionId
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('Quality Inspection API is running');
+}</textarea>
+                <button class="btn btn-secondary" onclick="copyScript()" style="margin-top: 10px;">Copy Script</button>
+            </div>
+
+            <div class="setup-instructions">
+                <h3>Step 3: Enable Drive Access</h3>
+                <p>1. In Apps Script, click <strong>Project Settings</strong> (⚙️)</p>
+                <p>2. Check: <strong>"Show appsscript.json manifest file"</strong></p>
+                <p>3. Go to <strong>Editor</strong>, click <strong>appsscript.json</strong></p>
+                <p>4. Replace contents with:</p>
+                <textarea readonly style="height: 120px; font-family: monospace; font-size: 11px; margin-top: 10px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">{
+  "timeZone": "Asia/Colombo",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+  ]
+}</textarea>
+                <p style="margin-top: 10px;">5. Save both files</p>
+            </div>
+
+            <div class="setup-instructions">
+                <h3>Step 4: Deploy & Authorize</h3>
+                <p>1. Click <strong>Deploy → New deployment</strong></p>
+                <p>2. Select <strong>Web app</strong></p>
+                <p>3. Execute as: <strong>Me</strong></p>
+                <p>4. Who has access: <strong>Anyone</strong></p>
+                <p>5. Click <strong>Deploy</strong></p>
+                <p>6. <strong>Authorize access</strong> when prompted</p>
+                <p>7. Copy the <strong>Web app URL</strong></p>
+                <p>8. Paste it in the Admin Settings above</p>
+            </div>
+
+            <button class="btn btn-secondary" onclick="closeSetupModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Default admin password (CHANGE THIS!)
+        const ADMIN_PASSWORD = 'admin123';
+
+        // PWA Install
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'flex';
+        });
+
+        document.getElementById('install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('install-btn').style.display = 'none';
+            }
+        });
+
+        // Station check codes mapping
+        const stationChecks = {
+            "INNER CUTTING": [
+                {id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope,without sharp edges & Actual length mention as per the Document", tool: "."},
+                {id: "CMU/IC/002", check: "(M) Inner Wire Rope Bumping", spec: "Properly Bumping", tool: "."}
+            ],
+            "OUTER CUTTING": [
+                {id: "CMU/OC/001", check: "(R) Outer Casing Cutting", spec: "Correct outer casing,&Actual length mention as per the Document without Damage", tool: "."}
+            ],
+            "SLEEVE CUTTING": [
+                {id: "CMU/SC/001", check: "(R) PVC Sleeve Cutting", spec: "Correct Sleeve,required length,mention as per the Document", tool: "."}
+            ],
+            "GLUING": [
+                {id: "CMU/GL/001", check: "(R) PVC Sleeve Pasting", spec: "Properly pasted with correct measurement mention as per the Process Document", tool: "."}
+            ],
+            "HEAT EMBORSING": [
+                {id: "CMU/HE/001", check: "(R) Print batch code according to month", spec: "Properly print part number,year & Date on PVC sleeve (using laser printer or Heat emborsing Machines)", tool: "."}
+            ],
+            "SWAGING": [
+                {id: "CMU/SW/001", check: "(R) END fitting Fixing", spec: "Fitted Required end fitting mention as per the process Document without Damage,Defect or Deformations.", tool: "."},
+                {id: "CMU/SW/002", check: "(R) END fitting Swaging", spec: "END fitting are properly crimped without any damage,defect or deformations mention as per the process Document.", tool: "."}
+            ],
+            "ASSEMBLY": [
+                {id: "CMU/AB/001", check: "(R) Assembling cable", spec: "Insert inner cable & parts Without Damage,Defect or Deformation mention as per the process Document", tool: "."},
+                {id: "CMU/AB/002", check: "(C) Free Length Cutting", spec: "Cutting Specified Specifications mention as per the Process Document & Cutting cable assembly straight without any bends.", tool: "Vernier Caliper"}
+            ],
+            "MANUAL BUMPING": [
+                {id: "CMU/MB/001", check: "(M) Bumping the Cable", spec: "Bumping On required Side,Cable without Damage.", tool: "."}
+            ],
+            "DIE CASTING": [
+                {id: "CMU/DC/001", check: "(C) Die casting the cable", spec: "Die Cast without damage,defect or deformation & using correct die type mention as per in the process Document.", tool: "."},
+                {id: "CMU/DC/002", check: "(R) Free travel Length verification", spec: "Recommended free travel length with tolerance mention as per the process Document.", tool: "Vernier Caliper"}
+            ]
+        };
+
+        let currentInspection = {
+            scheduleNo: '',
+            partNo: '',
+            operatorName: '',
+            inspectorName: '',
+            station: '',
+            substation: '',
+            selectedChecks: [],
+            checkResults: []
+        };
+
+        // Check configuration on load
+        window.onload = function() {
+            checkConfiguration();
+        };
+
+        function checkConfiguration() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            const warning = document.getElementById('not-configured-warning');
+            if (!url) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startInspection() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            if (!url) {
+                alert('This app is not configured. Please contact your administrator.');
+                return;
+            }
+            showScreen('screen-data-entry');
+        }
+
+        function showSettingsModal() {
+            document.getElementById('settings-modal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('active');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('settings-content').style.display = 'none';
+            document.getElementById('check-password-btn').style.display = 'block';
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById('settings-content').style.display = 'block';
+                document.getElementById('check-password-btn').style.display = 'none';
+                
+                // Load current URL if exists
+                const currentUrl = localStorage.getItem('googleSheetsUrl');
+                if (currentUrl) {
+                    document.getElementById('sheet-url-input').value = currentUrl;
+                }
+            } else {
+                alert('Incorrect password!');
+            }
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('sheet-url-input').value.trim();
+            if (!url) {
+                alert('Please enter the Web App URL');
+                return;
+            }
+            if (!url.includes('script.google.com')) {
+                alert('Please enter a valid Google Apps Script URL');
+                return;
+            }
+            localStorage.setItem('googleSheetsUrl', url);
+            alert('Settings saved successfully!');
+            closeSettingsModal();
+            checkConfiguration();
+        }
+
+        function showSetupInstructions() {
+            document.getElementById('setup-modal').classList.add('active');
+        }
+
+        function closeSetupModal() {
+            document.getElementById('setup-modal').classList.remove('active');
+        }
+
+        function copyScript() {
+            const textarea = document.getElementById('apps-script-code');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Script copied! Paste it into Google Apps Script.');
+        }
+
+        function goToStart() {
+            showScreen('screen-start');
+        }
+
+        function updateSubstation() {
+            const station = document.getElementById('station').value;
+            const checkCodesDiv = document.getElementById('check-codes');
+            checkCodesDiv.innerHTML = '';
+
+            if (station && stationChecks[station]) {
+                stationChecks[station].forEach(check => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    div.innerHTML = `
+                        <input type="checkbox" id="check-${check.id}" value="${check.id}">
+                        <label for="check-${check.id}" style="margin: 0; cursor: pointer;">
+                            <strong>${check.id}</strong> - ${check.check}
+                        </label>
+                    `;
+                    div.onclick = function(e) {
+                        if (e.target.tagName !== 'INPUT') {
+                            const checkbox = div.querySelector('input');
+                            checkbox.checked = !checkbox.checked;
+                        }
+                        div.classList.toggle('checked', div.querySelector('input').checked);
+                    };
+                    checkCodesDiv.appendChild(div);
+                });
+            }
+        }
+
+        function startQualityCheck() {
+            const scheduleNo = document.getElementById('schedule-no').value;
+            const partNo = document.getElementById('part-no').value;
+            const operatorName = document.getElementById('operator-name').value;
+            const inspectorName = document.getElementById('inspector-name').value;
+            const station = document.getElementById('station').value;
+            const substation = document.getElementById('substation').value;
+
+            if (!scheduleNo || !partNo || !operatorName || !inspectorName || !station) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const selectedCheckboxes = document.querySelectorAll('#check-codes input[type="checkbox"]:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('Please select at least one check code');
+                return;
+            }
+
+            currentInspection.scheduleNo = scheduleNo;
+            currentInspection.partNo = partNo;
+            currentInspection.operatorName = operatorName;
+            currentInspection.inspectorName = inspectorName;
+            currentInspection.station = station;
+            currentInspection.substation = substation;
+            currentInspection.selectedChecks = [];
+
+            selectedCheckboxes.forEach(cb => {
+                const checkId = cb.value;
+                const checkData = stationChecks[station].find(c => c.id === checkId);
+                currentInspection.selectedChecks.push(checkData);
+            });
+
+            renderQualityChecks();
+            showScreen('screen-quality-check');
+        }
+
+        function renderQualityChecks() {
+            const container = document.getElementById('checks-container');
+            container.innerHTML = '';
+            currentInspection.checkResults = [];
+
+            currentInspection.selectedChecks.forEach((check, index) => {
+                const checkDiv = document.createElement('div');
+                checkDiv.className = 'check-item';
+                checkDiv.id = `check-item-${index}`;
+                checkDiv.innerHTML = `
+                    <div class="check-header">
+                        <div>
+                            <div class="check-id">${check.id}</div>
+                            <div style="font-size: 14px; color: #333; font-weight: 600; margin-top: 5px;">${check.check}</div>
+                        </div>
+                    </div>
+                    <div class="check-spec">${check.spec}</div>
+                    ${check.tool !== '.' ? `<div style="color: #667eea; font-size: 13px; margin-top: 5px;"><strong>Tool:</strong> ${check.tool}</div>` : ''}
+                    
+                    <div class="quantity-input">
+                        <label style="margin: 0; min-width: 120px;">Checked Qty:</label>
+                        <input type="number" id="qty-${index}" min="1" placeholder="Enter quantity" onchange="updateResultButtons(${index})">
+                    </div>
+
+                    <div id="results-${index}" style="display: none;">
+                        <label>Mark Results (Click each item):</label>
+                        <div class="result-buttons" id="result-buttons-${index}"></div>
+                    </div>
+
+                    <div class="fail-section" id="fail-section-${index}">
+                        <div id="fail-items-${index}"></div>
+                    </div>
+                `;
+                container.appendChild(checkDiv);
+
+                currentInspection.checkResults.push({
+                    checkData: check,
+                    checkedQty: 0,
+                    results: [],
+                    failedItems: []
+                });
+            });
+
+            updateProgress();
+        }
+
+        function updateResultButtons(checkIndex) {
+            const qty = parseInt(document.getElementById(`qty-${checkIndex}`).value) || 0;
+            const resultsDiv = document.getElementById(`results-${checkIndex}`);
+            const buttonsDiv = document.getElementById(`result-buttons-${checkIndex}`);
+            
+            if (qty > 0) {
+                resultsDiv.style.display = 'block';
+                buttonsDiv.innerHTML = '';
+                
+                for (let i = 0; i < qty; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'result-btn';
+                    btn.textContent = i + 1;
+                    btn.onclick = function() {
+                        toggleResult(checkIndex, i);
+                    };
+                    buttonsDiv.appendChild(btn);
+                }
+
+                currentInspection.checkResults[checkIndex].checkedQty = qty;
+                currentInspection.checkResults[checkIndex].results = new Array(qty).fill('pending');
+            } else {
+                resultsDiv.style.display = 'none';
+            }
+            updateProgress();
+        }
+
+        function toggleResult(checkIndex, itemIndex) {
+            const btn = document.getElementById(`result-buttons-${checkIndex}`).children[itemIndex];
+            const currentResult = currentInspection.checkResults[checkIndex].results[itemIndex];
+            
+            if (currentResult === 'pending') {
+                currentInspection.checkResults[checkIndex].results[itemIndex] = 'pass';
+                btn.classList.add('pass');
+                btn.classList.remove('fail');
+            } else if (currentResult === 'pass') {
+                currentInspection.checkResults[checkIndex].results[itemIndex] = 'fail';
+                btn.classList.remove('pass');
+                btn.classList.add('fail');
+            } else {
+                currentInspection.checkResults[checkIndex].results[itemIndex] = 'pending';
+                btn.classList.remove('pass', 'fail');
+            }
+
+            updateFailItems(checkIndex);
+            updateProgress();
+        }
+
+        function updateFailItems(checkIndex) {
+            const results = currentInspection.checkResults[checkIndex].results;
+            const failIndices = [];
+            
+            results.forEach((result, idx) => {
+                if (result === 'fail') {
+                    failIndices.push(idx);
+                }
+            });
+
+            const failSection = document.getElementById(`fail-section-${checkIndex}`);
+            const failItemsDiv = document.getElementById(`fail-items-${checkIndex}`);
+            
+            if (failIndices.length > 0) {
+                failSection.classList.add('active');
+                
+                failItemsDiv.innerHTML = '<label style="font-weight: 600; color: #ef4444; margin-bottom: 10px; display: block;">Failed Items: ' + failIndices.length + '</label>';
+                failIndices.forEach(failIdx => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.cssText = 'background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ef4444;';
+                    itemDiv.innerHTML = `
+                        <h4 style="color: #ef4444; margin-bottom: 10px;">Failed Item #${failIdx + 1}</h4>
+                        <div class="form-group">
+                            <label>Failure Description:</label>
+                            <textarea id="fail-desc-${checkIndex}-${failIdx}" rows="2" placeholder="Describe the failure..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload Photo (Optional):</label>
+                            <input type="file" id="fail-photo-${checkIndex}-${failIdx}" accept="image/*" capture="environment" onchange="previewFailPhoto(${checkIndex}, ${failIdx})">
+                            <img id="photo-preview-${checkIndex}-${failIdx}" class="photo-preview" style="display: none;">
+                        </div>
+                    `;
+                    failItemsDiv.appendChild(itemDiv);
+                });
+            } else {
+                failSection.classList.remove('active');
+                failItemsDiv.innerHTML = '';
+            }
+        }
+
+        function previewFailPhoto(checkIndex, failIndex) {
+            const input = document.getElementById(`fail-photo-${checkIndex}-${failIndex}`);
+            const preview = document.getElementById(`photo-preview-${checkIndex}-${failIndex}`);
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateProgress() {
+            let completed = 0;
+            const total = currentInspection.checkResults.length;
+
+            currentInspection.checkResults.forEach((result, index) => {
+                const qtyEntered = result.checkedQty > 0;
+                const allMarked = result.results.length > 0 && 
+                                 result.results.length === result.checkedQty &&
+                                 result.results.every(r => r !== 'pending');
+                
+                if (qtyEntered && allMarked) {
+                    completed++;
+                    document.getElementById(`check-item-${index}`).classList.add('completed');
+                } else {
+                    document.getElementById(`check-item-${index}`).classList.remove('completed');
+                }
+            });
+
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = `${completed} of ${total} completed`;
+
+            const submitBtn = document.getElementById('submit-btn');
+            if (completed === total && total > 0) {
+                submitBtn.style.display = 'block';
+            } else {
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        function goToDataEntry() {
+            showScreen('screen-data-entry');
+        }
+
+        async function submitInspection() {
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            currentInspection.checkResults.forEach((result, checkIndex) => {
+                const failedItems = [];
+                result.results.forEach((res, itemIdx) => {
+                    if (res === 'fail') {
+                        const descInput = document.getElementById(`fail-desc-${checkIndex}-${itemIdx}`);
+                        const photoPreview = document.getElementById(`photo-preview-${checkIndex}-${itemIdx}`);
+                        
+                        failedItems.push({
+                            itemNumber: itemIdx + 1,
+                            description: descInput ? descInput.value : '',
+                            photo: photoPreview ? photoPreview.src : null
+                        });
+                    }
+                });
+                result.failedItems = failedItems;
+            });
+
+            const sheetData = {
+                scheduleNo: currentInspection.scheduleNo,
+                partNo: currentInspection.partNo,
+                operatorName: currentInspection.operatorName,
+                inspectorName: currentInspection.inspectorName,
+                station: currentInspection.station,
+                substation: currentInspection.substation,
+                checks: currentInspection.checkResults.map(result => ({
+                    id: result.checkData.id,
+                    check: result.checkData.check,
+                    specification: result.checkData.spec,
+                    checkedQty: result.checkedQty,
+                    pass: result.results.filter(r => r === 'pass').length,
+                    fail: result.results.filter(r => r === 'fail').length,
+                    failedItems: result.failedItems || []
+                }))
+            };
+
+            const sheetUrl = localStorage.getItem('googleSheetsUrl');
+            
+            try {
+                const response = await fetch(sheetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify(sheetData),
+                    redirect: 'follow'
+                });
+            } catch (error) {
+                console.log('Fetch error:', error);
+            }
+            
+            displaySummary();
+            showScreen('screen-success');
+        }
+
+        function displaySummary() {
+            const summaryDiv = document.getElementById('inspection-summary');
+            let totalPass = 0;
+            let totalFail = 0;
+
+            currentInspection.checkResults.forEach(result => {
+                totalPass += result.results.filter(r => r === 'pass').length;
+                totalFail += result.results.filter(r => r === 'fail').length;
+            });
+
+            const now = new Date();
+            const inspectionId = 'INS-' + now.getFullYear() + 
+                                 String(now.getMonth() + 1).padStart(2, '0') + 
+                                 String(now.getDate()).padStart(2, '0') + '-' +
+                                 String(now.getHours()).padStart(2, '0') + 
+                                 String(now.getMinutes()).padStart(2, '0') + 
+                                 String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('inspection-id-display').textContent = 'Inspection ID: ' + inspectionId;
+
+            summaryDiv.innerHTML = `
+                <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
+                <div class="summary-item">
+                    <strong>Schedule No:</strong>
+                    <span>${currentInspection.scheduleNo}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Part No:</strong>
+                    <span>${currentInspection.partNo}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Station:</strong>
+                    <span>${currentInspection.station}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Inspector:</strong>
+                    <span>${currentInspection.inspectorName}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Checks Completed:</strong>
+                    <span>${currentInspection.checkResults.length}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Total Passed:</strong>
+                    <span style="color: #10b981; font-weight: 600;">${totalPass}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Total Failed:</strong>
+                    <span style="color: #ef4444; font-weight: 600;">${totalFail}</span>
+                </div>
+            `;
+        }
+
+        function startNewInspection() {
+            document.getElementById('schedule-no').value = '';
+            document.getElementById('part-no').value = '';
+            document.getElementById('operator-name').value = '';
+            document.getElementById('inspector-name').value = '';
+            document.getElementById('station').value = '';
+            document.getElementById('substation').value = '';
+            document.getElementById('check-codes').innerHTML = '';
+            
+            currentInspection = {
+                scheduleNo: '',
+                partNo: '',
+                operatorName: '',
+                inspectorName: '',
+                station: '',
+                substation: '',
+                selectedChecks: [],
+                checkResults: []
+            };
+
+            showScreen('screen-data-entry');
+        }
+    </script>
+</body>
+</html>
