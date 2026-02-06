@@ -115,8 +115,8 @@
             color: white;
         }
 
-        .btn-danger {
-            background: #ef4444;
+        .btn-warning {
+            background: #f59e0b;
             color: white;
         }
 
@@ -152,6 +152,63 @@
             border-color: #667eea;
         }
 
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .schedule-summary {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
         .check-item {
             background: #f9fafb;
             padding: 20px;
@@ -165,13 +222,6 @@
             background: #f0fdf4;
         }
 
-        .check-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-
         .check-id {
             font-weight: 700;
             color: #667eea;
@@ -183,17 +233,6 @@
             font-size: 14px;
             margin: 8px 0;
             line-height: 1.5;
-        }
-
-        .quantity-input {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin: 15px 0;
-        }
-
-        .quantity-input input {
-            flex: 1;
         }
 
         .result-buttons {
@@ -241,66 +280,6 @@
             margin-top: 10px;
         }
 
-        .progress-bar {
-            background: #e5e7eb;
-            height: 8px;
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .summary {
-            background: #f9fafb;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-
-        .alert-warning {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
-        }
-
-        .checkbox-group {
-            margin: 15px 0;
-        }
-
         .checkbox-item {
             display: flex;
             align-items: center;
@@ -327,54 +306,6 @@
         .checkbox-item.checked {
             border-color: #667eea;
             background: #ede9fe;
-        }
-
-        .setup-instructions {
-            background: #fef3c7;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #f59e0b;
-        }
-
-        .setup-instructions h3 {
-            color: #92400e;
-            margin-bottom: 10px;
-        }
-
-        .setup-instructions p {
-            color: #78350f;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-
-        .setup-instructions code {
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        .install-btn {
-            background: #10b981;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px auto;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .install-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
         .modal {
@@ -423,6 +354,74 @@
         .close-modal:hover {
             color: #333;
         }
+
+        .batch-progress {
+            background: #ede9fe;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #667eea;
+        }
+
+        .batch-progress h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .history-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .history-item.complete {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .history-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .history-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-in-progress {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
@@ -441,41 +440,57 @@
                     <p>This app is not configured yet. Please contact your administrator.</p>
                 </div>
                 <button class="btn btn-primary" onclick="startInspection()">Start Inspection</button>
-                
-                <!-- Install PWA Button -->
-                <button class="install-btn" id="install-btn" style="display: none;">
-                    <span>📱</span>
-                    <span>Install App on Device</span>
-                </button>
+                <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
             </div>
 
-            <!-- Screen 2: Data Entry -->
-            <div class="screen" id="screen-data-entry">
-                <h2 style="margin-bottom: 20px;">Inspection Details</h2>
+            <!-- Screen 1.5: History -->
+            <div class="screen" id="screen-history">
+                <h2 style="margin-bottom: 20px;">Inspection History</h2>
                 
                 <div class="form-group">
-                    <label>Schedule No</label>
-                    <input type="text" id="schedule-no" required>
+                    <label>Filter by Schedule Number (Optional)</label>
+                    <input type="text" id="history-filter" placeholder="Enter schedule number" onkeyup="filterHistory()">
                 </div>
 
+                <div id="history-loading" class="alert alert-info" style="display: none;">
+                    Loading history...
+                </div>
+
+                <div id="history-empty" class="alert alert-warning" style="display: none;">
+                    No inspection history found.
+                </div>
+
+                <div id="history-container"></div>
+
+                <button class="btn btn-secondary" onclick="goToStart()">← Back to Home</button>
+            </div>
+
+            <!-- Screen 2: Initial Data Entry -->
+            <div class="screen" id="screen-initial-data">
+                <h2 style="margin-bottom: 20px;">Inspection Setup</h2>
+                
                 <div class="form-group">
-                    <label>Part No</label>
+                    <label>Part Number *</label>
                     <input type="text" id="part-no" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Operator Name</label>
-                    <input type="text" id="operator-name" required>
+                    <label>Schedule Number *</label>
+                    <input type="text" id="schedule-no" required onblur="checkExistingSchedule()">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">We'll check if this schedule exists</p>
+                </div>
+
+                <div id="existing-schedule-alert" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label>Batch Quantity *</label>
+                    <input type="number" id="batch-qty" min="1" required>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Total quantity in this batch</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Inspector Name</label>
-                    <input type="text" id="inspector-name" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Station</label>
-                    <select id="station" onchange="updateSubstation()">
+                    <label>Station *</label>
+                    <select id="station" onchange="updateStationChecks()">
                         <option value="">Select Station</option>
                         <option value="INNER CUTTING">INNER CUTTING</option>
                         <option value="OUTER CUTTING">OUTER CUTTING</option>
@@ -495,16 +510,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Select Check Codes (Multiple allowed)</label>
-                    <div class="checkbox-group" id="check-codes"></div>
+                    <label>Select Check Codes (Multiple allowed) *</label>
+                    <div id="check-codes" class="checkbox-group"></div>
                 </div>
 
-                <button class="btn btn-primary" onclick="startQualityCheck()">Continue to Quality Check</button>
+                <div class="form-group">
+                    <label>Operator Name (Optional)</label>
+                    <input type="text" id="operator-name">
+                </div>
+
+                <div class="form-group">
+                    <label>Inspector Name *</label>
+                    <input type="text" id="inspector-name" required>
+                </div>
+
+                <button class="btn btn-primary" onclick="proceedToInspection()">Continue to Quality Check</button>
                 <button class="btn btn-secondary" onclick="goToStart()">Cancel</button>
             </div>
 
             <!-- Screen 3: Quality Check -->
             <div class="screen" id="screen-quality-check">
+                <div class="batch-progress" id="batch-progress-info"></div>
+                
                 <h2 style="margin-bottom: 10px;">Quality Check</h2>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -514,20 +541,19 @@
                 <div id="checks-container"></div>
 
                 <button class="btn btn-success" onclick="submitInspection()" id="submit-btn" style="display: none;">Submit Inspection</button>
-                <button class="btn btn-secondary" onclick="goToDataEntry()">Back</button>
+                <button class="btn btn-secondary" onclick="goBackToEdit()">← Back to Edit Details</button>
             </div>
 
             <!-- Screen 4: Success -->
             <div class="screen" id="screen-success">
                 <div class="alert alert-success">
                     <h3 style="margin-bottom: 10px;">✓ Inspection Submitted Successfully!</h3>
-                    <p>Your inspection data and photos have been saved.</p>
-                    <p style="margin-top: 10px; font-weight: 600;" id="inspection-id-display"></p>
+                    <p id="success-message"></p>
                 </div>
 
-                <div class="summary" id="inspection-summary"></div>
+                <div id="inspection-summary" class="schedule-summary"></div>
 
-                <button class="btn btn-primary" onclick="startNewInspection(); showScreen('screen-start');">Start New Inspection</button>
+                <button class="btn btn-primary" onclick="startNewInspection()">Start New Inspection</button>
             </div>
         </div>
     </div>
@@ -551,293 +577,72 @@
                 <div class="form-group">
                     <label>Google Sheets Web App URL</label>
                     <input type="text" id="sheet-url-input" placeholder="https://script.google.com/macros/s/...">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">This is the deployment URL from Google Apps Script</p>
                 </div>
 
                 <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
-                
-                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-                
-                <h3 style="margin-bottom: 15px;">Setup Instructions</h3>
-                <button class="btn btn-secondary" onclick="showSetupInstructions()">View Setup Guide</button>
             </div>
 
             <button class="btn btn-primary" onclick="checkPassword()" id="check-password-btn">Unlock Settings</button>
         </div>
     </div>
 
-    <!-- Setup Instructions Modal -->
-    <div class="modal" id="setup-modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeSetupModal()">&times;</span>
-            <div class="modal-header">📋 Setup Guide</div>
-            
-            <div class="setup-instructions">
-                <h3>Step 1: Create Google Sheet</h3>
-                <p>1. Go to Google Sheets and create a new spreadsheet</p>
-                <p>2. Name it "Quality Inspections"</p>
-                <p>3. The script will automatically create these sheets:</p>
-                <p style="margin-left: 20px;">• <strong>All Inspections</strong> - Complete history</p>
-                <p style="margin-left: 20px;">• <strong>2026-02 Inspections</strong> - Current month (auto-created)</p>
-                <p style="margin-left: 20px;">• <strong>Failed Items</strong> - Detailed fail records</p>
-            </div>
-
-            <div class="setup-instructions">
-                <h3>Step 2: Add Apps Script</h3>
-                <p>1. In your Google Sheet, click <strong>Extensions → Apps Script</strong></p>
-                <p>2. Delete any existing code</p>
-                <p>3. Copy and paste the code below:</p>
-                <textarea id="apps-script-code" readonly style="height: 400px; font-family: monospace; font-size: 11px; margin-top: 10px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  try {
-    var jsonString = e.postData ? e.postData.contents : e.parameter.data;
-    if (!jsonString) {
-      jsonString = e.postData.getDataAsString();
-    }
-    var data = JSON.parse(jsonString);
-    
-    var timestamp = new Date();
-    var monthKey = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'yyyy-MM');
-    var inspectionId = 'INS-' + Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'yyyyMMdd-HHmmss');
-    
-    // Get or create All Inspections sheet
-    var allSheet = ss.getSheetByName('All Inspections');
-    if (!allSheet) {
-      allSheet = ss.insertSheet('All Inspections');
-      allSheet.appendRow(['Inspection ID', 'Timestamp', 'Schedule No', 'Part No', 'Operator Name', 'Inspector Name', 'Station', 'Substation', 'Total Checks', 'Total Passed', 'Total Failed']);
-    }
-    
-    // Get or create Monthly sheet
-    var monthSheet = ss.getSheetByName(monthKey + ' Inspections');
-    if (!monthSheet) {
-      monthSheet = ss.insertSheet(monthKey + ' Inspections');
-      monthSheet.appendRow(['Inspection ID', 'Timestamp', 'Schedule No', 'Part No', 'Operator Name', 'Inspector Name', 'Station', 'Substation', 'Total Checks', 'Total Passed', 'Total Failed']);
-    }
-    
-    // Get or create Failed Items sheet
-    var failSheet = ss.getSheetByName('Failed Items');
-    if (!failSheet) {
-      failSheet = ss.insertSheet('Failed Items');
-      failSheet.appendRow(['Inspection ID', 'Failed Item ID', 'Month', 'Timestamp', 'Check ID', 'Check Description', 'Specification', 'Failed Item #', 'Fail Description', 'Photo Link']);
-    }
-    
-    // Calculate totals
-    var totalPassed = 0;
-    var totalFailed = 0;
-    var totalChecks = data.checks.length;
-    
-    data.checks.forEach(function(check) {
-      totalPassed += check.pass;
-      totalFailed += check.fail;
-    });
-    
-    // Add to All Inspections
-    allSheet.appendRow([
-      inspectionId,
-      timestamp,
-      data.scheduleNo,
-      data.partNo,
-      data.operatorName,
-      data.inspectorName,
-      data.station,
-      data.substation,
-      totalChecks,
-      totalPassed,
-      totalFailed
-    ]);
-    
-    // Add to Monthly sheet
-    monthSheet.appendRow([
-      inspectionId,
-      timestamp,
-      data.scheduleNo,
-      data.partNo,
-      data.operatorName,
-      data.inspectorName,
-      data.station,
-      data.substation,
-      totalChecks,
-      totalPassed,
-      totalFailed
-    ]);
-    
-    // Get or create Photos folder
-    var folder;
-    try {
-      var folders = DriveApp.getFoldersByName('Quality Inspection Photos');
-      if (folders.hasNext()) {
-        folder = folders.next();
-      } else {
-        folder = DriveApp.createFolder('Quality Inspection Photos');
-      }
-    } catch (driveError) {
-      folder = null;
-    }
-    
-    // Add failed items
-    var failCounter = 1;
-    for (var i = 0; i < data.checks.length; i++) {
-      var check = data.checks[i];
-      
-      if (check.failedItems && check.failedItems.length > 0) {
-        for (var j = 0; j < check.failedItems.length; j++) {
-          var failItem = check.failedItems[j];
-          var failItemId = inspectionId + '-F' + failCounter;
-          failCounter++;
-          
-          var photoLink = '';
-          if (failItem.photo && folder) {
-            try {
-              var base64Data = failItem.photo.replace(/^data:image\/\w+;base64,/, '');
-              var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), 'image/jpeg', failItemId + '.jpg');
-              var file = folder.createFile(blob);
-              file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-              photoLink = file.getUrl();
-            } catch (photoError) {
-              photoLink = 'Upload failed';
-            }
-          }
-          
-          failSheet.appendRow([
-            inspectionId,
-            failItemId,
-            monthKey,
-            timestamp,
-            check.id,
-            check.check,
-            check.specification,
-            failItem.itemNumber,
-            failItem.description || '',
-            photoLink
-          ]);
-        }
-      }
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'success',
-      inspectionId: inspectionId
-    })).setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput('Quality Inspection API is running');
-}</textarea>
-                <button class="btn btn-secondary" onclick="copyScript()" style="margin-top: 10px;">Copy Script</button>
-            </div>
-
-            <div class="setup-instructions">
-                <h3>Step 3: Enable Drive Access</h3>
-                <p>1. In Apps Script, click <strong>Project Settings</strong> (⚙️)</p>
-                <p>2. Check: <strong>"Show appsscript.json manifest file"</strong></p>
-                <p>3. Go to <strong>Editor</strong>, click <strong>appsscript.json</strong></p>
-                <p>4. Replace contents with:</p>
-                <textarea readonly style="height: 120px; font-family: monospace; font-size: 11px; margin-top: 10px; width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">{
-  "timeZone": "Asia/Colombo",
-  "dependencies": {},
-  "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-  ]
-}</textarea>
-                <p style="margin-top: 10px;">5. Save both files</p>
-            </div>
-
-            <div class="setup-instructions">
-                <h3>Step 4: Deploy & Authorize</h3>
-                <p>1. Click <strong>Deploy → New deployment</strong></p>
-                <p>2. Select <strong>Web app</strong></p>
-                <p>3. Execute as: <strong>Me</strong></p>
-                <p>4. Who has access: <strong>Anyone</strong></p>
-                <p>5. Click <strong>Deploy</strong></p>
-                <p>6. <strong>Authorize access</strong> when prompted</p>
-                <p>7. Copy the <strong>Web app URL</strong></p>
-                <p>8. Paste it in the Admin Settings above</p>
-            </div>
-
-            <button class="btn btn-secondary" onclick="closeSetupModal()">Close</button>
-        </div>
-    </div>
-
     <script>
-        // Default admin password (CHANGE THIS!)
-        const ADMIN_PASSWORD = 'admin123';
+        const ADMIN_PASSWORD = 'admin123'; // CHANGE THIS!
 
-        // PWA Install
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('install-btn').style.display = 'flex';
-        });
-
-        document.getElementById('install-btn').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                document.getElementById('install-btn').style.display = 'none';
-            }
-        });
-
-        // Station check codes mapping
         const stationChecks = {
             "INNER CUTTING": [
-                {id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope,without sharp edges & Actual length mention as per the Document", tool: "."},
-                {id: "CMU/IC/002", check: "(M) Inner Wire Rope Bumping", spec: "Properly Bumping", tool: "."}
+                {id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope,without sharp edges & Actual length mention as per the Document"},
+                {id: "CMU/IC/002", check: "(M) Inner Wire Rope Bumping", spec: "Properly Bumping"}
             ],
             "OUTER CUTTING": [
-                {id: "CMU/OC/001", check: "(R) Outer Casing Cutting", spec: "Correct outer casing,&Actual length mention as per the Document without Damage", tool: "."}
+                {id: "CMU/OC/001", check: "(R) Outer Casing Cutting", spec: "Correct outer casing,&Actual length mention as per the Document without Damage"}
             ],
             "SLEEVE CUTTING": [
-                {id: "CMU/SC/001", check: "(R) PVC Sleeve Cutting", spec: "Correct Sleeve,required length,mention as per the Document", tool: "."}
+                {id: "CMU/SC/001", check: "(R) PVC Sleeve Cutting", spec: "Correct Sleeve,required length,mention as per the Document"}
             ],
             "GLUING": [
-                {id: "CMU/GL/001", check: "(R) PVC Sleeve Pasting", spec: "Properly pasted with correct measurement mention as per the Process Document", tool: "."}
+                {id: "CMU/GL/001", check: "(R) PVC Sleeve Pasting", spec: "Properly pasted with correct measurement mention as per the Process Document"}
             ],
             "HEAT EMBORSING": [
-                {id: "CMU/HE/001", check: "(R) Print batch code according to month", spec: "Properly print part number,year & Date on PVC sleeve (using laser printer or Heat emborsing Machines)", tool: "."}
+                {id: "CMU/HE/001", check: "(R) Print batch code according to month", spec: "Properly print part number,year & Date on PVC sleeve (using laser printer or Heat emborsing Machines)"}
             ],
             "SWAGING": [
-                {id: "CMU/SW/001", check: "(R) END fitting Fixing", spec: "Fitted Required end fitting mention as per the process Document without Damage,Defect or Deformations.", tool: "."},
-                {id: "CMU/SW/002", check: "(R) END fitting Swaging", spec: "END fitting are properly crimped without any damage,defect or deformations mention as per the process Document.", tool: "."}
+                {id: "CMU/SW/001", check: "(R) END fitting Fixing", spec: "Fitted Required end fitting mention as per the process Document without Damage,Defect or Deformations."},
+                {id: "CMU/SW/002", check: "(R) END fitting Swaging", spec: "END fitting are properly crimped without any damage,defect or deformations mention as per the process Document."}
             ],
             "ASSEMBLY": [
-                {id: "CMU/AB/001", check: "(R) Assembling cable", spec: "Insert inner cable & parts Without Damage,Defect or Deformation mention as per the process Document", tool: "."},
-                {id: "CMU/AB/002", check: "(C) Free Length Cutting", spec: "Cutting Specified Specifications mention as per the Process Document & Cutting cable assembly straight without any bends.", tool: "Vernier Caliper"}
+                {id: "CMU/AB/001", check: "(R) Assembling cable", spec: "Insert inner cable & parts Without Damage,Defect or Deformation mention as per the process Document"},
+                {id: "CMU/AB/002", check: "(C) Free Length Cutting", spec: "Cutting Specified Specifications mention as per the Process Document & Cutting cable assembly straight without any bends."}
             ],
             "MANUAL BUMPING": [
-                {id: "CMU/MB/001", check: "(M) Bumping the Cable", spec: "Bumping On required Side,Cable without Damage.", tool: "."}
+                {id: "CMU/MB/001", check: "(M) Bumping the Cable", spec: "Bumping On required Side,Cable without Damage."}
             ],
             "DIE CASTING": [
-                {id: "CMU/DC/001", check: "(C) Die casting the cable", spec: "Die Cast without damage,defect or deformation & using correct die type mention as per in the process Document.", tool: "."},
-                {id: "CMU/DC/002", check: "(R) Free travel Length verification", spec: "Recommended free travel length with tolerance mention as per the process Document.", tool: "Vernier Caliper"}
+                {id: "CMU/DC/001", check: "(C) Die casting the cable", spec: "Die Cast without damage,defect or deformation & using correct die type mention as per in the process Document."},
+                {id: "CMU/DC/002", check: "(R) Free travel Length verification", spec: "Recommended free travel length with tolerance mention as per the process Document."}
             ]
         };
 
-        let currentInspection = {
+        let currentSchedule = {
             scheduleNo: '',
             partNo: '',
-            operatorName: '',
-            inspectorName: '',
+            batchQty: 0,
             station: '',
             substation: '',
+            operatorName: '',
+            inspectorName: '',
             selectedChecks: [],
+            existingData: null,
+            checksCompleted: 0,
+            totalChecksNeeded: 0
+        };
+
+        let currentInspection = {
             checkResults: []
         };
 
-        // Check configuration on load
+        let lastClickedButton = {};
+
         window.onload = function() {
             checkConfiguration();
         };
@@ -863,72 +668,138 @@ function doGet(e) {
                 alert('This app is not configured. Please contact your administrator.');
                 return;
             }
-            showScreen('screen-data-entry');
-        }
-
-        function showSettingsModal() {
-            document.getElementById('settings-modal').classList.add('active');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settings-modal').classList.remove('active');
-            document.getElementById('admin-password').value = '';
-            document.getElementById('settings-content').style.display = 'none';
-            document.getElementById('check-password-btn').style.display = 'block';
-        }
-
-        function checkPassword() {
-            const password = document.getElementById('admin-password').value;
-            if (password === ADMIN_PASSWORD) {
-                document.getElementById('settings-content').style.display = 'block';
-                document.getElementById('check-password-btn').style.display = 'none';
-                
-                // Load current URL if exists
-                const currentUrl = localStorage.getItem('googleSheetsUrl');
-                if (currentUrl) {
-                    document.getElementById('sheet-url-input').value = currentUrl;
-                }
-            } else {
-                alert('Incorrect password!');
-            }
-        }
-
-        function saveSettings() {
-            const url = document.getElementById('sheet-url-input').value.trim();
-            if (!url) {
-                alert('Please enter the Web App URL');
-                return;
-            }
-            if (!url.includes('script.google.com')) {
-                alert('Please enter a valid Google Apps Script URL');
-                return;
-            }
-            localStorage.setItem('googleSheetsUrl', url);
-            alert('Settings saved successfully!');
-            closeSettingsModal();
-            checkConfiguration();
-        }
-
-        function showSetupInstructions() {
-            document.getElementById('setup-modal').classList.add('active');
-        }
-
-        function closeSetupModal() {
-            document.getElementById('setup-modal').classList.remove('active');
-        }
-
-        function copyScript() {
-            const textarea = document.getElementById('apps-script-code');
-            textarea.select();
-            document.execCommand('copy');
-            alert('Script copied! Paste it into Google Apps Script.');
+            showScreen('screen-initial-data');
         }
 
         function goToStart() {
+            // Reset form
+            document.getElementById('part-no').value = '';
+            document.getElementById('schedule-no').value = '';
+            document.getElementById('batch-qty').value = '';
+            document.getElementById('station').value = '';
+            document.getElementById('substation').value = '';
+            document.getElementById('operator-name').value = '';
+            document.getElementById('inspector-name').value = '';
+            document.getElementById('check-codes').innerHTML = '';
+            document.getElementById('existing-schedule-alert').style.display = 'none';
+            
+            currentSchedule = {
+                scheduleNo: '',
+                partNo: '',
+                batchQty: 0,
+                station: '',
+                substation: '',
+                operatorName: '',
+                inspectorName: '',
+                selectedChecks: [],
+                existingData: null,
+                checksCompleted: 0,
+                totalChecksNeeded: 0
+            };
+            
             showScreen('screen-start');
         }
 
-        function updateSubstation() {
+        function goBack() {
+            showScreen('screen-initial-data');
+        }
+
+        function goBackToEdit() {
+            if (confirm('Going back will clear your current progress. Are you sure?')) {
+                showScreen('screen-initial-data');
+            }
+        }
+
+        async function viewHistory() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            if (!url) {
+                alert('This app is not configured. Please contact your administrator.');
+                return;
+            }
+
+            showScreen('screen-history');
+            document.getElementById('history-loading').style.display = 'block';
+            document.getElementById('history-empty').style.display = 'none';
+            document.getElementById('history-container').innerHTML = '';
+
+            try {
+                const queryUrl = `${url}?action=getHistory`;
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+
+                document.getElementById('history-loading').style.display = 'none';
+
+                if (data.schedules && data.schedules.length > 0) {
+                    displayHistory(data.schedules);
+                } else {
+                    document.getElementById('history-empty').style.display = 'block';
+                }
+            } catch (error) {
+                console.log('History fetch error:', error);
+                document.getElementById('history-loading').style.display = 'none';
+                document.getElementById('history-empty').style.display = 'block';
+            }
+        }
+
+        let allHistory = [];
+
+        function displayHistory(schedules) {
+            allHistory = schedules;
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
+
+            schedules.forEach(schedule => {
+                const isComplete = schedule.status === 'Complete';
+                const progressPercent = (schedule.checksCompleted / schedule.batchQty * 100).toFixed(0);
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item' + (isComplete ? ' complete' : '');
+                itemDiv.innerHTML = `
+                    <div class="history-header">
+                        <div class="history-title">Schedule: ${schedule.scheduleNo}</div>
+                        <span class="history-status ${isComplete ? 'status-complete' : 'status-in-progress'}">
+                            ${schedule.status}
+                        </span>
+                    </div>
+                    <div class="history-details">
+                        <div><strong>Part No:</strong> ${schedule.partNo}</div>
+                        <div><strong>Batch Qty:</strong> ${schedule.batchQty}</div>
+                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.batchQty} (${progressPercent}%)</div>
+                        <div style="background: #e5e7eb; height: 8px; border-radius: 10px; margin: 10px 0; overflow: hidden;">
+                            <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${progressPercent}%;"></div>
+                        </div>
+                        <div><strong>Last Updated:</strong> ${new Date(schedule.lastUpdated).toLocaleString()}</div>
+                        <div><strong>Last Inspector:</strong> ${schedule.lastInspector}</div>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function filterHistory() {
+            const filterText = document.getElementById('history-filter').value.trim().toLowerCase();
+            
+            if (!filterText) {
+                displayHistory(allHistory);
+                return;
+            }
+
+            const filtered = allHistory.filter(schedule => 
+                schedule.scheduleNo.toLowerCase().includes(filterText) ||
+                schedule.partNo.toLowerCase().includes(filterText)
+            );
+
+            if (filtered.length > 0) {
+                displayHistory(filtered);
+                document.getElementById('history-empty').style.display = 'none';
+            } else {
+                document.getElementById('history-container').innerHTML = '';
+                document.getElementById('history-empty').style.display = 'block';
+                document.getElementById('history-empty').textContent = 'No matching schedules found.';
+            }
+        }
+
+        function updateStationChecks() {
             const station = document.getElementById('station').value;
             const checkCodesDiv = document.getElementById('check-codes');
             checkCodesDiv.innerHTML = '';
@@ -955,16 +826,66 @@ function doGet(e) {
             }
         }
 
-        function startQualityCheck() {
-            const scheduleNo = document.getElementById('schedule-no').value;
-            const partNo = document.getElementById('part-no').value;
-            const operatorName = document.getElementById('operator-name').value;
-            const inspectorName = document.getElementById('inspector-name').value;
-            const station = document.getElementById('station').value;
-            const substation = document.getElementById('substation').value;
+        async function checkExistingSchedule() {
+            const scheduleNo = document.getElementById('schedule-no').value.trim();
+            const partNo = document.getElementById('part-no').value.trim();
+            const alertDiv = document.getElementById('existing-schedule-alert');
+            
+            if (!scheduleNo || !partNo) {
+                alertDiv.style.display = 'none';
+                return;
+            }
 
-            if (!scheduleNo || !partNo || !operatorName || !inspectorName || !station) {
-                alert('Please fill in all required fields');
+            const sheetUrl = localStorage.getItem('googleSheetsUrl');
+            if (!sheetUrl) return;
+
+            try {
+                // Query for existing schedule
+                const queryUrl = `${sheetUrl}?action=lookup&scheduleNo=${encodeURIComponent(scheduleNo)}&partNo=${encodeURIComponent(partNo)}`;
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+
+                if (data.exists) {
+                    currentSchedule.existingData = data;
+                    currentSchedule.checksCompleted = data.checksCompleted || 0;
+                    currentSchedule.totalChecksNeeded = data.batchQty || 0;
+
+                    alertDiv.className = 'alert alert-info';
+                    alertDiv.style.display = 'block';
+                    alertDiv.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">📋 Existing Schedule Found!</h4>
+                        <p><strong>Part No:</strong> ${data.partNo}</p>
+                        <p><strong>Batch Qty:</strong> ${data.batchQty}</p>
+                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.batchQty}</p>
+                        <p><strong>Remaining:</strong> ${data.batchQty - data.checksCompleted}</p>
+                        <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ You can continue from where you left off!</p>
+                    `;
+
+                    // Pre-fill data
+                    document.getElementById('batch-qty').value = data.batchQty;
+                    document.getElementById('batch-qty').readOnly = true;
+                } else {
+                    alertDiv.style.display = 'none';
+                    document.getElementById('batch-qty').readOnly = false;
+                    currentSchedule.existingData = null;
+                }
+            } catch (error) {
+                console.log('Lookup error:', error);
+                alertDiv.style.display = 'none';
+            }
+        }
+
+        function proceedToInspection() {
+            const partNo = document.getElementById('part-no').value.trim();
+            const scheduleNo = document.getElementById('schedule-no').value.trim();
+            const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
+            const station = document.getElementById('station').value;
+            const substation = document.getElementById('substation').value.trim();
+            const operatorName = document.getElementById('operator-name').value.trim();
+            const inspectorName = document.getElementById('inspector-name').value.trim();
+
+            if (!partNo || !scheduleNo || !batchQty || !station || !inspectorName) {
+                alert('Please fill in all required fields (marked with *)');
                 return;
             }
 
@@ -974,22 +895,49 @@ function doGet(e) {
                 return;
             }
 
-            currentInspection.scheduleNo = scheduleNo;
-            currentInspection.partNo = partNo;
-            currentInspection.operatorName = operatorName;
-            currentInspection.inspectorName = inspectorName;
-            currentInspection.station = station;
-            currentInspection.substation = substation;
-            currentInspection.selectedChecks = [];
+            currentSchedule.partNo = partNo;
+            currentSchedule.scheduleNo = scheduleNo;
+            currentSchedule.batchQty = batchQty;
+            currentSchedule.station = station;
+            currentSchedule.substation = substation;
+            currentSchedule.operatorName = operatorName || 'N/A';
+            currentSchedule.inspectorName = inspectorName;
+            currentSchedule.selectedChecks = [];
 
             selectedCheckboxes.forEach(cb => {
                 const checkId = cb.value;
                 const checkData = stationChecks[station].find(c => c.id === checkId);
-                currentInspection.selectedChecks.push(checkData);
+                currentSchedule.selectedChecks.push(checkData);
             });
 
+            if (!currentSchedule.totalChecksNeeded) {
+                currentSchedule.totalChecksNeeded = batchQty;
+            }
+
+            renderBatchProgress();
             renderQualityChecks();
             showScreen('screen-quality-check');
+        }
+
+        function renderBatchProgress() {
+            const progressDiv = document.getElementById('batch-progress-info');
+            const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
+            
+            progressDiv.innerHTML = `
+                <h4>Schedule: ${currentSchedule.scheduleNo}</h4>
+                <div class="summary-item">
+                    <strong>Total Batch:</strong>
+                    <span>${currentSchedule.totalChecksNeeded}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Completed:</strong>
+                    <span style="color: #10b981; font-weight: 600;">${currentSchedule.checksCompleted}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Remaining:</strong>
+                    <span style="color: #f59e0b; font-weight: 600;">${remaining}</span>
+                </div>
+            `;
         }
 
         function renderQualityChecks() {
@@ -997,23 +945,21 @@ function doGet(e) {
             container.innerHTML = '';
             currentInspection.checkResults = [];
 
-            currentInspection.selectedChecks.forEach((check, index) => {
+            currentSchedule.selectedChecks.forEach((check, index) => {
                 const checkDiv = document.createElement('div');
                 checkDiv.className = 'check-item';
                 checkDiv.id = `check-item-${index}`;
                 checkDiv.innerHTML = `
-                    <div class="check-header">
-                        <div>
-                            <div class="check-id">${check.id}</div>
-                            <div style="font-size: 14px; color: #333; font-weight: 600; margin-top: 5px;">${check.check}</div>
-                        </div>
+                    <div>
+                        <div class="check-id">${check.id}</div>
+                        <div style="font-size: 14px; color: #333; font-weight: 600; margin-top: 5px;">${check.check}</div>
                     </div>
                     <div class="check-spec">${check.spec}</div>
-                    ${check.tool !== '.' ? `<div style="color: #667eea; font-size: 13px; margin-top: 5px;"><strong>Tool:</strong> ${check.tool}</div>` : ''}
                     
-                    <div class="quantity-input">
-                        <label style="margin: 0; min-width: 120px;">Checked Qty:</label>
-                        <input type="number" id="qty-${index}" min="1" placeholder="Enter quantity" onchange="updateResultButtons(${index})">
+                    <div style="margin: 15px 0;">
+                        <label style="margin: 0;">Checked Qty Today:</label>
+                        <input type="number" id="qty-${index}" min="1" max="${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted}" placeholder="Enter quantity" style="margin-top: 8px;" onchange="updateResultButtons(${index})">
+                        <p style="font-size: 12px; color: #666; margin-top: 5px;">Max: ${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted} remaining</p>
                     </div>
 
                     <div id="results-${index}" style="display: none;">
@@ -1057,10 +1003,16 @@ function doGet(e) {
             updateProgress();
         }
 
-        let lastClickedButton = {};
-
         function updateResultButtons(checkIndex) {
             const qty = parseInt(document.getElementById(`qty-${checkIndex}`).value) || 0;
+            const maxAllowed = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
+            
+            if (qty > maxAllowed) {
+                alert(`You can only check up to ${maxAllowed} items (remaining in batch)`);
+                document.getElementById(`qty-${checkIndex}`).value = maxAllowed;
+                return;
+            }
+
             const resultsDiv = document.getElementById(`results-${checkIndex}`);
             const buttonsDiv = document.getElementById(`result-buttons-${checkIndex}`);
             
@@ -1072,7 +1024,6 @@ function doGet(e) {
                     const btn = document.createElement('button');
                     btn.className = 'result-btn';
                     btn.textContent = i + 1;
-                    btn.dataset.index = i;
                     btn.onclick = function(e) {
                         toggleResult(checkIndex, i, e.shiftKey);
                     };
@@ -1083,7 +1034,6 @@ function doGet(e) {
                 currentInspection.checkResults[checkIndex].results = new Array(qty).fill('pending');
                 lastClickedButton[checkIndex] = null;
                 
-                // Set max values for range inputs
                 document.getElementById(`range-from-${checkIndex}`).max = qty;
                 document.getElementById(`range-to-${checkIndex}`).max = qty;
             } else {
@@ -1095,13 +1045,11 @@ function doGet(e) {
         function toggleResult(checkIndex, itemIndex, shiftKey) {
             const btn = document.getElementById(`result-buttons-${checkIndex}`).children[itemIndex];
             
-            // Handle shift-click range selection
             if (shiftKey && lastClickedButton[checkIndex] !== null && lastClickedButton[checkIndex] !== itemIndex) {
                 const start = Math.min(lastClickedButton[checkIndex], itemIndex);
                 const end = Math.max(lastClickedButton[checkIndex], itemIndex);
                 const firstState = currentInspection.checkResults[checkIndex].results[lastClickedButton[checkIndex]];
                 
-                // Apply same state to range
                 for (let i = start; i <= end; i++) {
                     const rangeBtn = document.getElementById(`result-buttons-${checkIndex}`).children[i];
                     if (firstState === 'pending') {
@@ -1120,7 +1068,6 @@ function doGet(e) {
                     }
                 }
             } else {
-                // Normal single click toggle
                 const currentResult = currentInspection.checkResults[checkIndex].results[itemIndex];
                 
                 if (currentResult === 'pending') {
@@ -1163,7 +1110,7 @@ function doGet(e) {
                 const to = parseInt(document.getElementById(`range-to-${checkIndex}`).value) || buttons.length;
                 
                 if (from < 1 || to > buttons.length || from > to) {
-                    alert('Invalid range! Please enter valid item numbers.');
+                    alert('Invalid range!');
                     return;
                 }
                 
@@ -1280,16 +1227,18 @@ function doGet(e) {
             }
         }
 
-        function goToDataEntry() {
-            showScreen('screen-data-entry');
-        }
-
         async function submitInspection() {
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn.disabled) return;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
             
+            // Calculate total checks done today
+            let totalCheckedToday = 0;
+            currentInspection.checkResults.forEach(result => {
+                totalCheckedToday += result.checkedQty;
+            });
+
             currentInspection.checkResults.forEach((result, checkIndex) => {
                 const failedItems = [];
                 result.results.forEach((res, itemIdx) => {
@@ -1308,12 +1257,15 @@ function doGet(e) {
             });
 
             const sheetData = {
-                scheduleNo: currentInspection.scheduleNo,
-                partNo: currentInspection.partNo,
-                operatorName: currentInspection.operatorName,
-                inspectorName: currentInspection.inspectorName,
-                station: currentInspection.station,
-                substation: currentInspection.substation,
+                scheduleNo: currentSchedule.scheduleNo,
+                partNo: currentSchedule.partNo,
+                batchQty: currentSchedule.batchQty,
+                operatorName: currentSchedule.operatorName,
+                inspectorName: currentSchedule.inspectorName,
+                station: currentSchedule.station,
+                substation: currentSchedule.substation,
+                previouslyCompleted: currentSchedule.checksCompleted,
+                checkedToday: totalCheckedToday,
                 checks: currentInspection.checkResults.map(result => ({
                     id: result.checkData.id,
                     check: result.checkData.check,
@@ -1328,7 +1280,7 @@ function doGet(e) {
             const sheetUrl = localStorage.getItem('googleSheetsUrl');
             
             try {
-                const response = await fetch(sheetUrl, {
+                await fetch(sheetUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain',
@@ -1340,12 +1292,11 @@ function doGet(e) {
                 console.log('Fetch error:', error);
             }
             
-            displaySummary();
+            displaySummary(totalCheckedToday);
             showScreen('screen-success');
         }
 
-        function displaySummary() {
-            const summaryDiv = document.getElementById('inspection-summary');
+        function displaySummary(totalCheckedToday) {
             let totalPass = 0;
             let totalFail = 0;
 
@@ -1354,70 +1305,98 @@ function doGet(e) {
                 totalFail += result.results.filter(r => r === 'fail').length;
             });
 
-            const now = new Date();
-            const inspectionId = 'INS-' + now.getFullYear() + 
-                                 String(now.getMonth() + 1).padStart(2, '0') + 
-                                 String(now.getDate()).padStart(2, '0') + '-' +
-                                 String(now.getHours()).padStart(2, '0') + 
-                                 String(now.getMinutes()).padStart(2, '0') + 
-                                 String(now.getSeconds()).padStart(2, '0');
+            const newTotal = currentSchedule.checksCompleted + totalCheckedToday;
+            const remaining = currentSchedule.batchQty - newTotal;
+            const isComplete = remaining === 0;
 
-            document.getElementById('inspection-id-display').textContent = 'Inspection ID: ' + inspectionId;
+            document.getElementById('success-message').innerHTML = `
+                Checked ${totalCheckedToday} items today.<br>
+                ${isComplete ? '<strong style="color: #10b981;">✓ Schedule Complete!</strong>' : `<strong>${remaining} items remaining in this schedule.</strong>`}
+            `;
 
-            summaryDiv.innerHTML = `
+            document.getElementById('inspection-summary').innerHTML = `
                 <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
                 <div class="summary-item">
                     <strong>Schedule No:</strong>
-                    <span>${currentInspection.scheduleNo}</span>
+                    <span>${currentSchedule.scheduleNo}</span>
                 </div>
                 <div class="summary-item">
                     <strong>Part No:</strong>
-                    <span>${currentInspection.partNo}</span>
+                    <span>${currentSchedule.partNo}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Station:</strong>
-                    <span>${currentInspection.station}</span>
+                    <strong>Total Batch Qty:</strong>
+                    <span>${currentSchedule.batchQty}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Inspector:</strong>
-                    <span>${currentInspection.inspectorName}</span>
+                    <strong>Checked Today:</strong>
+                    <span style="color: #667eea; font-weight: 600;">${totalCheckedToday}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Checks Completed:</strong>
-                    <span>${currentInspection.checkResults.length}</span>
+                    <strong>Total Completed:</strong>
+                    <span style="color: #10b981; font-weight: 600;">${newTotal}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Total Passed:</strong>
+                    <strong>Remaining:</strong>
+                    <span style="color: #f59e0b; font-weight: 600;">${remaining}</span>
+                </div>
+                <hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <div class="summary-item">
+                    <strong>Passed Today:</strong>
                     <span style="color: #10b981; font-weight: 600;">${totalPass}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Total Failed:</strong>
+                    <strong>Failed Today:</strong>
                     <span style="color: #ef4444; font-weight: 600;">${totalFail}</span>
                 </div>
             `;
         }
 
         function startNewInspection() {
-            document.getElementById('schedule-no').value = '';
-            document.getElementById('part-no').value = '';
-            document.getElementById('operator-name').value = '';
-            document.getElementById('inspector-name').value = '';
-            document.getElementById('station').value = '';
-            document.getElementById('substation').value = '';
-            document.getElementById('check-codes').innerHTML = '';
-            
-            currentInspection = {
-                scheduleNo: '',
-                partNo: '',
-                operatorName: '',
-                inspectorName: '',
-                station: '',
-                substation: '',
-                selectedChecks: [],
-                checkResults: []
-            };
+            goToStart();
+        }
 
-            showScreen('screen-data-entry');
+        // Settings functions
+        function showSettingsModal() {
+            document.getElementById('settings-modal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('active');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('settings-content').style.display = 'none';
+            document.getElementById('check-password-btn').style.display = 'block';
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === ADMIN_PASSWORD) {
+                document.getElementById('settings-content').style.display = 'block';
+                document.getElementById('check-password-btn').style.display = 'none';
+                
+                const currentUrl = localStorage.getItem('googleSheetsUrl');
+                if (currentUrl) {
+                    document.getElementById('sheet-url-input').value = currentUrl;
+                }
+            } else {
+                alert('Incorrect password!');
+            }
+        }
+
+        function saveSettings() {
+            const url = document.getElementById('sheet-url-input').value.trim();
+            if (!url) {
+                alert('Please enter the Web App URL');
+                return;
+            }
+            if (!url.includes('script.google.com')) {
+                alert('Please enter a valid Google Apps Script URL');
+                return;
+            }
+            localStorage.setItem('googleSheetsUrl', url);
+            alert('Settings saved successfully!');
+            closeSettingsModal();
+            checkConfiguration();
         }
     </script>
 </body>
