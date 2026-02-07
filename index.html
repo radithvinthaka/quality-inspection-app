@@ -484,8 +484,43 @@
 
                 <div class="form-group">
                     <label>Batch Quantity *</label>
-                    <input type="number" id="batch-qty" min="1" required>
+                    <input type="number" id="batch-qty" min="1" required onchange="updateSampleSize()">
                     <p style="font-size: 12px; color: #666; margin-top: 5px;">Total quantity in this batch</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Inspection Level (Optional - ISO 2859-1)</label>
+                    <select id="inspection-level" onchange="updateSampleSize()">
+                        <option value="">No Level Selected (Manual sampling)</option>
+                        <option value="I">Level I - Reduced Inspection (Smaller sample)</option>
+                        <option value="II" selected>Level II - Normal Inspection (Standard sample)</option>
+                        <option value="III">Level III - Tightened Inspection (Larger sample)</option>
+                    </select>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Suggests sample size per check. You can inspect more if needed.</p>
+                </div>
+
+                <div id="sample-size-display" style="display: none;" class="alert alert-info">
+                    <h4 style="margin-bottom: 10px;">📊 Suggested Sample Size (ISO 2859-1)</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <strong>Batch Size:</strong>
+                            <div id="display-batch-size" style="font-size: 18px; color: #1e40af;">-</div>
+                        </div>
+                        <div>
+                            <strong>Sample Size:</strong>
+                            <div id="display-sample-size" style="font-size: 18px; color: #059669; font-weight: 700;">-</div>
+                        </div>
+                        <div>
+                            <strong>Code Letter:</strong>
+                            <div id="display-code-letter" style="font-size: 18px; color: #1e40af; font-weight: 700;">-</div>
+                        </div>
+                    </div>
+                    <div style="padding: 10px; background: #fef3c7; border-radius: 6px; border: 1px solid #f59e0b;">
+                        <p style="font-size: 12px; color: #92400e; margin: 0;">
+                            <strong>💡 Note:</strong> This is a <strong>suggested minimum</strong>. You can inspect more items if desired.
+                            Sample size will be shown for each check individually.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -589,6 +624,88 @@
     <script>
         const ADMIN_PASSWORD = 'admin123'; // CHANGE THIS!
 
+        // ISO 2859-1 Sample Size Code Letters (General Inspection Level II)
+        const iso2859SampleSizes = {
+            // ISO 2859-1 Sample Size Table
+            // Level I (S-1) - Reduced inspection
+            // Level II (S-2) - Normal inspection (General Inspection Level II)
+            // Level III (S-3) - Tightened inspection
+            levelI: [
+                { min: 2, max: 8, letter: 'A', sampleSize: 2 },
+                { min: 9, max: 15, letter: 'A', sampleSize: 2 },
+                { min: 16, max: 25, letter: 'A', sampleSize: 2 },
+                { min: 26, max: 50, letter: 'B', sampleSize: 3 },
+                { min: 51, max: 90, letter: 'B', sampleSize: 3 },
+                { min: 91, max: 150, letter: 'C', sampleSize: 5 },
+                { min: 151, max: 280, letter: 'D', sampleSize: 8 },
+                { min: 281, max: 500, letter: 'E', sampleSize: 13 },
+                { min: 501, max: 1200, letter: 'F', sampleSize: 20 },
+                { min: 1201, max: 3200, letter: 'G', sampleSize: 32 },
+                { min: 3201, max: 10000, letter: 'H', sampleSize: 50 },
+                { min: 10001, max: 35000, letter: 'J', sampleSize: 80 },
+                { min: 35001, max: 150000, letter: 'K', sampleSize: 125 },
+                { min: 150001, max: 500000, letter: 'L', sampleSize: 200 },
+                { min: 500001, max: Infinity, letter: 'M', sampleSize: 315 }
+            ],
+            levelII: [
+                { min: 2, max: 8, letter: 'A', sampleSize: 2 },
+                { min: 9, max: 15, letter: 'A', sampleSize: 2 },
+                { min: 16, max: 25, letter: 'B', sampleSize: 3 },
+                { min: 26, max: 50, letter: 'C', sampleSize: 5 },
+                { min: 51, max: 90, letter: 'C', sampleSize: 5 },
+                { min: 91, max: 150, letter: 'D', sampleSize: 8 },
+                { min: 151, max: 280, letter: 'E', sampleSize: 13 },
+                { min: 281, max: 500, letter: 'F', sampleSize: 20 },
+                { min: 501, max: 1200, letter: 'G', sampleSize: 32 },
+                { min: 1201, max: 3200, letter: 'H', sampleSize: 50 },
+                { min: 3201, max: 10000, letter: 'J', sampleSize: 80 },
+                { min: 10001, max: 35000, letter: 'K', sampleSize: 125 },
+                { min: 35001, max: 150000, letter: 'L', sampleSize: 200 },
+                { min: 150001, max: 500000, letter: 'M', sampleSize: 315 },
+                { min: 500001, max: Infinity, letter: 'N', sampleSize: 500 }
+            ],
+            levelIII: [
+                { min: 2, max: 8, letter: 'B', sampleSize: 3 },
+                { min: 9, max: 15, letter: 'B', sampleSize: 3 },
+                { min: 16, max: 25, letter: 'C', sampleSize: 5 },
+                { min: 26, max: 50, letter: 'D', sampleSize: 8 },
+                { min: 51, max: 90, letter: 'E', sampleSize: 13 },
+                { min: 91, max: 150, letter: 'F', sampleSize: 20 },
+                { min: 151, max: 280, letter: 'G', sampleSize: 32 },
+                { min: 281, max: 500, letter: 'H', sampleSize: 50 },
+                { min: 501, max: 1200, letter: 'J', sampleSize: 80 },
+                { min: 1201, max: 3200, letter: 'K', sampleSize: 125 },
+                { min: 3201, max: 10000, letter: 'L', sampleSize: 200 },
+                { min: 10001, max: 35000, letter: 'M', sampleSize: 315 },
+                { min: 35001, max: 150000, letter: 'N', sampleSize: 500 },
+                { min: 150001, max: 500000, letter: 'P', sampleSize: 800 },
+                { min: 500001, max: Infinity, letter: 'Q', sampleSize: 1250 }
+            ]
+        };
+
+        function calculateSampleSize(batchSize, level = 'II') {
+            let ranges;
+            if (level === 'I') {
+                ranges = iso2859SampleSizes.levelI;
+            } else if (level === 'III') {
+                ranges = iso2859SampleSizes.levelIII;
+            } else {
+                ranges = iso2859SampleSizes.levelII; // Default
+            }
+            
+            for (let range of ranges) {
+                if (batchSize >= range.min && batchSize <= range.max) {
+                    return {
+                        sampleSize: range.sampleSize,
+                        letter: range.letter,
+                        batchSize: batchSize,
+                        level: level
+                    };
+                }
+            }
+            return { sampleSize: 0, letter: 'N/A', batchSize: batchSize, level: level };
+        }
+
         const stationChecks = {
             "INNER CUTTING": [
                 {id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope,without sharp edges & Actual length mention as per the Document"},
@@ -627,6 +744,9 @@
             scheduleNo: '',
             partNo: '',
             batchQty: 0,
+            sampleSize: 0,
+            sampleCodeLetter: '',
+            inspectionLevel: '',
             station: '',
             substation: '',
             operatorName: '',
@@ -646,6 +766,31 @@
         window.onload = function() {
             checkConfiguration();
         };
+
+        function updateSampleSize() {
+            const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
+            const level = document.getElementById('inspection-level').value || 'II';
+            const displayDiv = document.getElementById('sample-size-display');
+            
+            if (batchQty > 0 && level) {
+                const result = calculateSampleSize(batchQty, level);
+                
+                document.getElementById('display-batch-size').textContent = batchQty.toLocaleString();
+                document.getElementById('display-sample-size').textContent = result.sampleSize.toLocaleString();
+                document.getElementById('display-code-letter').textContent = result.letter;
+                
+                displayDiv.style.display = 'block';
+                
+                // Store sample size and level for later use
+                currentSchedule.sampleSize = result.sampleSize;
+                currentSchedule.sampleCodeLetter = result.letter;
+                currentSchedule.inspectionLevel = level;
+            } else {
+                displayDiv.style.display = 'none';
+                currentSchedule.sampleSize = 0;
+                currentSchedule.inspectionLevel = '';
+            }
+        }
 
         function checkConfiguration() {
             const url = localStorage.getItem('googleSheetsUrl');
@@ -750,7 +895,7 @@
 
             schedules.forEach(schedule => {
                 const isComplete = schedule.status === 'Complete';
-                const progressPercent = (schedule.checksCompleted / schedule.batchQty * 100).toFixed(0);
+                const progressPercent = (schedule.checksCompleted / schedule.sampleSize * 100).toFixed(0);
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item' + (isComplete ? ' complete' : '');
@@ -763,8 +908,9 @@
                     </div>
                     <div class="history-details">
                         <div><strong>Part No:</strong> ${schedule.partNo}</div>
-                        <div><strong>Batch Qty:</strong> ${schedule.batchQty}</div>
-                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.batchQty} (${progressPercent}%)</div>
+                        <div><strong>Batch Qty:</strong> ${schedule.batchQty.toLocaleString()}</div>
+                        <div><strong>Sample Size (ISO 2859):</strong> ${schedule.sampleSize} (Code ${schedule.codeLetter})</div>
+                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.sampleSize} (${progressPercent}%)</div>
                         <div style="background: #e5e7eb; height: 8px; border-radius: 10px; margin: 10px 0; overflow: hidden;">
                             <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${progressPercent}%;"></div>
                         </div>
@@ -848,7 +994,8 @@
                 if (data.exists) {
                     currentSchedule.existingData = data;
                     currentSchedule.checksCompleted = data.checksCompleted || 0;
-                    currentSchedule.totalChecksNeeded = data.batchQty || 0;
+                    currentSchedule.totalChecksNeeded = data.sampleSize || 0;
+                    currentSchedule.sampleSize = data.sampleSize || 0;
 
                     alertDiv.className = 'alert alert-info';
                     alertDiv.style.display = 'block';
@@ -856,14 +1003,18 @@
                         <h4 style="margin-bottom: 10px;">📋 Existing Schedule Found!</h4>
                         <p><strong>Part No:</strong> ${data.partNo}</p>
                         <p><strong>Batch Qty:</strong> ${data.batchQty}</p>
-                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.batchQty}</p>
-                        <p><strong>Remaining:</strong> ${data.batchQty - data.checksCompleted}</p>
+                        <p><strong>Sample Size (ISO 2859):</strong> ${data.sampleSize}</p>
+                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.sampleSize}</p>
+                        <p><strong>Remaining:</strong> ${data.sampleSize - data.checksCompleted}</p>
                         <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ You can continue from where you left off!</p>
                     `;
 
                     // Pre-fill data
                     document.getElementById('batch-qty').value = data.batchQty;
                     document.getElementById('batch-qty').readOnly = true;
+                    
+                    // Update sample size display
+                    updateSampleSize();
                 } else {
                     alertDiv.style.display = 'none';
                     document.getElementById('batch-qty').readOnly = false;
@@ -895,6 +1046,13 @@
                 return;
             }
 
+            // Calculate sample size if not already done
+            if (!currentSchedule.sampleSize) {
+                const result = calculateSampleSize(batchQty);
+                currentSchedule.sampleSize = result.sampleSize;
+                currentSchedule.sampleCodeLetter = result.letter;
+            }
+
             currentSchedule.partNo = partNo;
             currentSchedule.scheduleNo = scheduleNo;
             currentSchedule.batchQty = batchQty;
@@ -910,8 +1068,9 @@
                 currentSchedule.selectedChecks.push(checkData);
             });
 
+            // Use sample size as total checks needed, not batch qty
             if (!currentSchedule.totalChecksNeeded) {
-                currentSchedule.totalChecksNeeded = batchQty;
+                currentSchedule.totalChecksNeeded = currentSchedule.sampleSize;
             }
 
             renderBatchProgress();
@@ -926,8 +1085,12 @@
             progressDiv.innerHTML = `
                 <h4>Schedule: ${currentSchedule.scheduleNo}</h4>
                 <div class="summary-item">
-                    <strong>Total Batch:</strong>
-                    <span>${currentSchedule.totalChecksNeeded}</span>
+                    <strong>Batch Size:</strong>
+                    <span>${currentSchedule.batchQty}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Sample Size (ISO 2859):</strong>
+                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.totalChecksNeeded} (Code ${currentSchedule.sampleCodeLetter})</span>
                 </div>
                 <div class="summary-item">
                     <strong>Completed:</strong>
@@ -946,6 +1109,16 @@
             currentInspection.checkResults = [];
 
             currentSchedule.selectedChecks.forEach((check, index) => {
+                const suggestedSample = currentSchedule.sampleSize || 0;
+                const inspectionLevel = currentSchedule.inspectionLevel || 'II';
+                
+                // Show level selector per check
+                const levelOptions = currentSchedule.inspectionLevel 
+                    ? `<option value="I" ${inspectionLevel === 'I' ? 'selected' : ''}>Level I (Reduced)</option>
+                       <option value="II" ${inspectionLevel === 'II' ? 'selected' : ''}>Level II (Normal)</option>
+                       <option value="III" ${inspectionLevel === 'III' ? 'selected' : ''}>Level III (Tightened)</option>`
+                    : '<option value="">No level</option>';
+                
                 const checkDiv = document.createElement('div');
                 checkDiv.className = 'check-item';
                 checkDiv.id = `check-item-${index}`;
@@ -956,9 +1129,25 @@
                     </div>
                     <div class="check-spec">${check.spec}</div>
                     
+                    ${suggestedSample > 0 ? `
+                    <div style="background: #dbeafe; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #3b82f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: #1e40af;">📊 Suggested Sample:</strong>
+                                <span style="font-size: 18px; color: #059669; font-weight: 700; margin-left: 8px;">${suggestedSample}</span>
+                                <span style="font-size: 12px; color: #666; margin-left: 5px;">(Code ${currentSchedule.sampleCodeLetter})</span>
+                            </div>
+                            <select id="check-level-${index}" onchange="updateCheckLevel(${index})" style="padding: 6px; border: 1px solid #3b82f6; border-radius: 4px; font-size: 12px;">
+                                ${levelOptions}
+                            </select>
+                        </div>
+                        <p style="font-size: 11px; color: #1e40af; margin-top: 5px; margin-bottom: 0;">You can inspect more if needed</p>
+                    </div>
+                    ` : ''}
+                    
                     <div style="margin: 15px 0;">
                         <label style="margin: 0;">Checked Qty Today:</label>
-                        <input type="number" id="qty-${index}" min="1" max="${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted}" placeholder="Enter quantity" style="margin-top: 8px;" onchange="updateResultButtons(${index})">
+                        <input type="number" id="qty-${index}" min="1" max="${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted}" placeholder="${suggestedSample > 0 ? 'Min: ' + suggestedSample : 'Enter quantity'}" style="margin-top: 8px;" onchange="updateResultButtons(${index})">
                         <p style="font-size: 12px; color: #666; margin-top: 5px;">Max: ${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted} remaining</p>
                     </div>
 
@@ -995,12 +1184,36 @@
                 currentInspection.checkResults.push({
                     checkData: check,
                     checkedQty: 0,
+                    suggestedSample: suggestedSample,
+                    inspectionLevel: inspectionLevel,
                     results: [],
                     failedItems: []
                 });
             });
 
             updateProgress();
+        }
+
+        function updateCheckLevel(checkIndex) {
+            const newLevel = document.getElementById(`check-level-${checkIndex}`).value;
+            const batchQty = currentSchedule.batchQty;
+            
+            if (newLevel && batchQty > 0) {
+                const result = calculateSampleSize(batchQty, newLevel);
+                currentInspection.checkResults[checkIndex].suggestedSample = result.sampleSize;
+                currentInspection.checkResults[checkIndex].inspectionLevel = newLevel;
+                
+                // Update display
+                const checkDiv = document.getElementById(`check-item-${checkIndex}`);
+                const suggestedElement = checkDiv.querySelector('.dbeafe');
+                if (suggestedElement) {
+                    suggestedElement.querySelector('span:nth-of-type(2)').textContent = result.sampleSize;
+                    suggestedElement.querySelector('span:nth-of-type(3)').textContent = `(Code ${result.letter})`;
+                }
+                
+                // Update placeholder
+                document.getElementById(`qty-${checkIndex}`).placeholder = `Min: ${result.sampleSize}`;
+            }
         }
 
         function updateResultButtons(checkIndex) {
@@ -1306,12 +1519,12 @@
             });
 
             const newTotal = currentSchedule.checksCompleted + totalCheckedToday;
-            const remaining = currentSchedule.batchQty - newTotal;
+            const remaining = currentSchedule.sampleSize - newTotal;
             const isComplete = remaining === 0;
 
             document.getElementById('success-message').innerHTML = `
                 Checked ${totalCheckedToday} items today.<br>
-                ${isComplete ? '<strong style="color: #10b981;">✓ Schedule Complete!</strong>' : `<strong>${remaining} items remaining in this schedule.</strong>`}
+                ${isComplete ? '<strong style="color: #10b981;">✓ Sample Complete!</strong>' : `<strong>${remaining} items remaining in sample.</strong>`}
             `;
 
             document.getElementById('inspection-summary').innerHTML = `
@@ -1325,8 +1538,12 @@
                     <span>${currentSchedule.partNo}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Total Batch Qty:</strong>
-                    <span>${currentSchedule.batchQty}</span>
+                    <strong>Batch Qty:</strong>
+                    <span>${currentSchedule.batchQty.toLocaleString()}</span>
+                </div>
+                <div class="summary-item">
+                    <strong>Sample Size (ISO 2859):</strong>
+                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.sampleSize} (Code ${currentSchedule.sampleCodeLetter})</span>
                 </div>
                 <div class="summary-item">
                     <strong>Checked Today:</strong>
