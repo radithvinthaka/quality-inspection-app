@@ -578,7 +578,7 @@
                             <p style="font-size: 12px; color: #92400e; margin-top: 5px;" id="suggested-sample-text"></p>
                         </div>
                         <div style="flex: 1;">
-                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Remaining in Sample:</label>
+                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Remaining in Batch:</label>
                             <div style="font-size: 24px; color: #059669; font-weight: 700;" id="remaining-display">-</div>
                         </div>
                     </div>
@@ -851,9 +851,6 @@
                 scheduleNo: '',
                 partNo: '',
                 batchQty: 0,
-                sampleSize: 0,
-                sampleCodeLetter: '',
-                inspectionLevel: '',
                 station: '',
                 substation: '',
                 operatorName: '',
@@ -1076,11 +1073,9 @@
 
             // Calculate sample size if not already done
             if (!currentSchedule.sampleSize) {
-                const level = document.getElementById('inspection-level').value || 'II';
-                const result = calculateSampleSize(batchQty, level);
+                const result = calculateSampleSize(batchQty);
                 currentSchedule.sampleSize = result.sampleSize;
                 currentSchedule.sampleCodeLetter = result.letter;
-                currentSchedule.inspectionLevel = level;
             }
 
             currentSchedule.partNo = partNo;
@@ -1144,16 +1139,11 @@
             const inspectionLevel = currentSchedule.inspectionLevel || '';
             const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
             
-            // FIXED: Initialize the batch check input and set proper max
-            const batchCheckInput = document.getElementById('batch-check-qty');
-            batchCheckInput.value = ''; // Clear any previous value
-            batchCheckInput.max = remaining; // Set max to remaining samples
-            
             document.getElementById('remaining-display').textContent = remaining;
             
             if (suggestedSample > 0) {
                 document.getElementById('suggested-sample-text').innerHTML = 
-                    `📊 Suggested: <strong>${suggestedSample}</strong> (ISO 2859 Level ${inspectionLevel}, Code ${currentSchedule.sampleCodeLetter}). You can check more if needed.<br><strong>Remaining to inspect:</strong> ${remaining} samples.`;
+                    `📊 Suggested: <strong>${suggestedSample}</strong> (ISO 2859 Level ${inspectionLevel}, Code ${currentSchedule.sampleCodeLetter}). You can check more if needed.`;
             } else {
                 document.getElementById('suggested-sample-text').textContent = 
                     'Enter the number of items you want to inspect today.';
@@ -1216,14 +1206,14 @@
             const maxAllowed = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
             
             if (qty > maxAllowed) {
-                alert(`You can only check up to ${maxAllowed} items (remaining in sample)`);
+                alert(`You can only check up to ${maxAllowed} items (remaining in batch)`);
                 document.getElementById('batch-check-qty').value = maxAllowed;
                 return;
             }
 
-            // FIXED: Update remaining display correctly
+            // Update remaining display
             const newRemaining = maxAllowed - qty;
-            document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : 0;
+            document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : maxAllowed;
 
             if (qty > 0) {
                 // Update all checks with the same quantity
