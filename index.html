@@ -914,7 +914,8 @@
 
             schedules.forEach(schedule => {
                 const isComplete = schedule.status === 'Complete';
-                const progressPercent = (schedule.checksCompleted / schedule.batchQty * 100).toFixed(0);
+                const sampleSize = schedule.sampleSize || schedule.batchQty;
+                const progressPercent = sampleSize > 0 ? (schedule.samplesInspected / sampleSize * 100).toFixed(0) : 0;
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item' + (isComplete ? ' complete' : '');
@@ -927,8 +928,9 @@
                     </div>
                     <div class="history-details">
                         <div><strong>Part No:</strong> ${schedule.partNo}</div>
-                        <div><strong>Batch Qty:</strong> ${schedule.batchQty.toLocaleString()}</div>
-                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.batchQty} (${progressPercent}%)</div>
+                        <div><strong>Batch Qty (Production):</strong> ${schedule.batchQty.toLocaleString()}</div>
+                        <div><strong>Sample Size (Inspect):</strong> ${sampleSize} ${schedule.inspectionLevel ? '(' + schedule.inspectionLevel + ')' : ''}</div>
+                        <div><strong>Progress:</strong> ${schedule.samplesInspected} / ${sampleSize} (${progressPercent}%)</div>
                         <div style="background: #e5e7eb; height: 8px; border-radius: 10px; margin: 10px 0; overflow: hidden;">
                             <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${progressPercent}%;"></div>
                         </div>
@@ -1011,24 +1013,30 @@
 
                 if (data.exists) {
                     currentSchedule.existingData = data;
-                    currentSchedule.checksCompleted = data.checksCompleted || 0;
-                    currentSchedule.totalChecksNeeded = data.batchQty || 0;
-                    currentSchedule.checksCompleted = data.checksCompleted || 0;
+                    currentSchedule.checksCompleted = data.samplesInspected || 0;
+                    currentSchedule.totalChecksNeeded = data.sampleSize || data.batchQty;
+                    currentSchedule.sampleSize = data.sampleSize || 0;
+                    currentSchedule.inspectionLevel = data.inspectionLevel || '';
 
                     alertDiv.className = 'alert alert-info';
                     alertDiv.style.display = 'block';
                     alertDiv.innerHTML = `
                         <h4 style="margin-bottom: 10px;">📋 Existing Schedule Found!</h4>
                         <p><strong>Part No:</strong> ${data.partNo}</p>
-                        <p><strong>Batch Qty:</strong> ${data.batchQty}</p>
-                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.batchQty}</p>
-                        <p><strong>Remaining:</strong> ${data.batchQty - data.checksCompleted}</p>
+                        <p><strong>Batch Qty (Production):</strong> ${data.batchQty.toLocaleString()}</p>
+                        <p><strong>Sample Size (Inspect):</strong> ${data.sampleSize}</p>
+                        <p><strong>Samples Inspected:</strong> ${data.samplesInspected} / ${data.sampleSize}</p>
+                        <p><strong>Remaining Samples:</strong> ${data.remainingSamples}</p>
                         <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ You can continue from where you left off!</p>
                     `;
 
                     // Pre-fill data
                     document.getElementById('batch-qty').value = data.batchQty;
                     document.getElementById('batch-qty').readOnly = true;
+                    
+                    if (data.inspectionLevel) {
+                        document.getElementById('inspection-level').value = data.inspectionLevel;
+                    }
                     
                     // Update sample size display
                     updateSampleSize();
@@ -1097,24 +1105,25 @@
 
         function renderBatchProgress() {
             const progressDiv = document.getElementById('batch-progress-info');
-            const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
+            const sampleSize = currentSchedule.sampleSize || currentSchedule.totalChecksNeeded;
+            const remaining = sampleSize - currentSchedule.checksCompleted;
             
             progressDiv.innerHTML = `
                 <h4>Schedule: ${currentSchedule.scheduleNo}</h4>
                 <div class="summary-item">
-                    <strong>Batch Size:</strong>
+                    <strong>Batch Qty (Production):</strong>
                     <span>${currentSchedule.batchQty}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Sample Size (ISO 2859):</strong>
-                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.totalChecksNeeded} (Code ${currentSchedule.sampleCodeLetter})</span>
+                    <strong>Sample Size (Inspect):</strong>
+                    <span style="color: #667eea; font-weight: 600;">${sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Completed:</strong>
+                    <strong>Samples Inspected:</strong>
                     <span style="color: #10b981; font-weight: 600;">${currentSchedule.checksCompleted}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Remaining:</strong>
+                    <strong>Remaining Samples:</strong>
                     <span style="color: #f59e0b; font-weight: 600;">${remaining}</span>
                 </div>
             `;
@@ -1460,6 +1469,7 @@
                 scheduleNo: currentSchedule.scheduleNo,
                 partNo: currentSchedule.partNo,
                 batchQty: currentSchedule.batchQty,
+                sampleSize: currentSchedule.sampleSize || currentSchedule.batchQty,
                 operatorName: currentSchedule.operatorName,
                 inspectorName: currentSchedule.inspectorName,
                 station: currentSchedule.station,
