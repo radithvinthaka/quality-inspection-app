@@ -1211,6 +1211,10 @@
                 return;
             }
 
+            // Update remaining display
+            const newRemaining = maxAllowed - qty;
+            document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : maxAllowed;
+
             if (qty > 0) {
                 // Update all checks with the same quantity
                 currentInspection.checkResults.forEach((result, index) => {
