@@ -578,7 +578,7 @@
                             <p style="font-size: 12px; color: #92400e; margin-top: 5px;" id="suggested-sample-text"></p>
                         </div>
                         <div style="flex: 1;">
-                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Remaining in Batch:</label>
+                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Remaining in Sample:</label>
                             <div style="font-size: 24px; color: #059669; font-weight: 700;" id="remaining-display">-</div>
                         </div>
                     </div>
@@ -851,6 +851,9 @@
                 scheduleNo: '',
                 partNo: '',
                 batchQty: 0,
+                sampleSize: 0,
+                sampleCodeLetter: '',
+                inspectionLevel: '',
                 station: '',
                 substation: '',
                 operatorName: '',
@@ -1073,9 +1076,11 @@
 
             // Calculate sample size if not already done
             if (!currentSchedule.sampleSize) {
-                const result = calculateSampleSize(batchQty);
+                const level = document.getElementById('inspection-level').value || 'II';
+                const result = calculateSampleSize(batchQty, level);
                 currentSchedule.sampleSize = result.sampleSize;
                 currentSchedule.sampleCodeLetter = result.letter;
+                currentSchedule.inspectionLevel = level;
             }
 
             currentSchedule.partNo = partNo;
@@ -1206,14 +1211,14 @@
             const maxAllowed = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
             
             if (qty > maxAllowed) {
-                alert(`You can only check up to ${maxAllowed} items (remaining in batch)`);
+                alert(`You can only check up to ${maxAllowed} items (remaining in sample)`);
                 document.getElementById('batch-check-qty').value = maxAllowed;
                 return;
             }
 
-            // Update remaining display
+            // FIXED: Update remaining display correctly
             const newRemaining = maxAllowed - qty;
-            document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : maxAllowed;
+            document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : 0;
 
             if (qty > 0) {
                 // Update all checks with the same quantity
