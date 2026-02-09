@@ -1144,11 +1144,16 @@
             const inspectionLevel = currentSchedule.inspectionLevel || '';
             const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
             
+            // FIXED: Initialize the batch check input and set proper max
+            const batchCheckInput = document.getElementById('batch-check-qty');
+            batchCheckInput.value = ''; // Clear any previous value
+            batchCheckInput.max = remaining; // Set max to remaining samples
+            
             document.getElementById('remaining-display').textContent = remaining;
             
             if (suggestedSample > 0) {
                 document.getElementById('suggested-sample-text').innerHTML = 
-                    `📊 Suggested: <strong>${suggestedSample}</strong> (ISO 2859 Level ${inspectionLevel}, Code ${currentSchedule.sampleCodeLetter}). You can check more if needed.`;
+                    `📊 Suggested: <strong>${suggestedSample}</strong> (ISO 2859 Level ${inspectionLevel}, Code ${currentSchedule.sampleCodeLetter}). You can check more if needed.<br><strong>Remaining to inspect:</strong> ${remaining} samples.`;
             } else {
                 document.getElementById('suggested-sample-text').textContent = 
                     'Enter the number of items you want to inspect today.';
