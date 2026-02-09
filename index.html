@@ -914,7 +914,7 @@
 
             schedules.forEach(schedule => {
                 const isComplete = schedule.status === 'Complete';
-                const progressPercent = (schedule.checksCompleted / schedule.sampleSize * 100).toFixed(0);
+                const progressPercent = (schedule.checksCompleted / schedule.batchQty * 100).toFixed(0);
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item' + (isComplete ? ' complete' : '');
@@ -928,8 +928,7 @@
                     <div class="history-details">
                         <div><strong>Part No:</strong> ${schedule.partNo}</div>
                         <div><strong>Batch Qty:</strong> ${schedule.batchQty.toLocaleString()}</div>
-                        <div><strong>Sample Size (ISO 2859):</strong> ${schedule.sampleSize} (Code ${schedule.codeLetter})</div>
-                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.sampleSize} (${progressPercent}%)</div>
+                        <div><strong>Progress:</strong> ${schedule.checksCompleted} / ${schedule.batchQty} (${progressPercent}%)</div>
                         <div style="background: #e5e7eb; height: 8px; border-radius: 10px; margin: 10px 0; overflow: hidden;">
                             <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${progressPercent}%;"></div>
                         </div>
@@ -1013,8 +1012,8 @@
                 if (data.exists) {
                     currentSchedule.existingData = data;
                     currentSchedule.checksCompleted = data.checksCompleted || 0;
-                    currentSchedule.totalChecksNeeded = data.sampleSize || 0;
-                    currentSchedule.sampleSize = data.sampleSize || 0;
+                    currentSchedule.totalChecksNeeded = data.batchQty || 0;
+                    currentSchedule.checksCompleted = data.checksCompleted || 0;
 
                     alertDiv.className = 'alert alert-info';
                     alertDiv.style.display = 'block';
@@ -1022,9 +1021,8 @@
                         <h4 style="margin-bottom: 10px;">📋 Existing Schedule Found!</h4>
                         <p><strong>Part No:</strong> ${data.partNo}</p>
                         <p><strong>Batch Qty:</strong> ${data.batchQty}</p>
-                        <p><strong>Sample Size (ISO 2859):</strong> ${data.sampleSize}</p>
-                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.sampleSize}</p>
-                        <p><strong>Remaining:</strong> ${data.sampleSize - data.checksCompleted}</p>
+                        <p><strong>Checks Completed:</strong> ${data.checksCompleted} / ${data.batchQty}</p>
+                        <p><strong>Remaining:</strong> ${data.batchQty - data.checksCompleted}</p>
                         <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ You can continue from where you left off!</p>
                     `;
 
