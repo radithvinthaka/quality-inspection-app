@@ -568,6 +568,25 @@
                 <div class="batch-progress" id="batch-progress-info"></div>
                 
                 <h2 style="margin-bottom: 10px;">Quality Check</h2>
+                
+                <div style="background: #fef3c7; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #f59e0b;">
+                    <h4 style="color: #92400e; margin-bottom: 10px;">📦 Items to Inspect Today</h4>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div style="flex: 1;">
+                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Quantity to Check:</label>
+                            <input type="number" id="batch-check-qty" min="1" placeholder="Enter quantity" style="width: 100%; padding: 12px; border: 2px solid #f59e0b; border-radius: 8px; font-size: 16px;" onchange="updateBatchCheckQty()">
+                            <p style="font-size: 12px; color: #92400e; margin-top: 5px;" id="suggested-sample-text"></p>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="margin-bottom: 5px; display: block; font-weight: 600;">Remaining in Batch:</label>
+                            <div style="font-size: 24px; color: #059669; font-weight: 700;" id="remaining-display">-</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: #92400e; margin-top: 10px; border-top: 1px solid #fbbf24; padding-top: 10px;">
+                        <strong>Note:</strong> All selected checks will be performed on the <strong>same items</strong>.
+                    </p>
+                </div>
+
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                 </div>
@@ -1107,18 +1126,23 @@
             const container = document.getElementById('checks-container');
             container.innerHTML = '';
             currentInspection.checkResults = [];
+            
+            // Set up suggested sample display
+            const suggestedSample = currentSchedule.sampleSize || 0;
+            const inspectionLevel = currentSchedule.inspectionLevel || '';
+            const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
+            
+            document.getElementById('remaining-display').textContent = remaining;
+            
+            if (suggestedSample > 0) {
+                document.getElementById('suggested-sample-text').innerHTML = 
+                    `📊 Suggested: <strong>${suggestedSample}</strong> (ISO 2859 Level ${inspectionLevel}, Code ${currentSchedule.sampleCodeLetter}). You can check more if needed.`;
+            } else {
+                document.getElementById('suggested-sample-text').textContent = 
+                    'Enter the number of items you want to inspect today.';
+            }
 
             currentSchedule.selectedChecks.forEach((check, index) => {
-                const suggestedSample = currentSchedule.sampleSize || 0;
-                const inspectionLevel = currentSchedule.inspectionLevel || 'II';
-                
-                // Show level selector per check
-                const levelOptions = currentSchedule.inspectionLevel 
-                    ? `<option value="I" ${inspectionLevel === 'I' ? 'selected' : ''}>Level I (Reduced)</option>
-                       <option value="II" ${inspectionLevel === 'II' ? 'selected' : ''}>Level II (Normal)</option>
-                       <option value="III" ${inspectionLevel === 'III' ? 'selected' : ''}>Level III (Tightened)</option>`
-                    : '<option value="">No level</option>';
-                
                 const checkDiv = document.createElement('div');
                 checkDiv.className = 'check-item';
                 checkDiv.id = `check-item-${index}`;
@@ -1129,29 +1153,7 @@
                     </div>
                     <div class="check-spec">${check.spec}</div>
                     
-                    ${suggestedSample > 0 ? `
-                    <div style="background: #dbeafe; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #3b82f6;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <strong style="color: #1e40af;">📊 Suggested Sample:</strong>
-                                <span style="font-size: 18px; color: #059669; font-weight: 700; margin-left: 8px;">${suggestedSample}</span>
-                                <span style="font-size: 12px; color: #666; margin-left: 5px;">(Code ${currentSchedule.sampleCodeLetter})</span>
-                            </div>
-                            <select id="check-level-${index}" onchange="updateCheckLevel(${index})" style="padding: 6px; border: 1px solid #3b82f6; border-radius: 4px; font-size: 12px;">
-                                ${levelOptions}
-                            </select>
-                        </div>
-                        <p style="font-size: 11px; color: #1e40af; margin-top: 5px; margin-bottom: 0;">You can inspect more if needed</p>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="margin: 15px 0;">
-                        <label style="margin: 0;">Checked Qty Today:</label>
-                        <input type="number" id="qty-${index}" min="1" max="${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted}" placeholder="${suggestedSample > 0 ? 'Min: ' + suggestedSample : 'Enter quantity'}" style="margin-top: 8px;" onchange="updateResultButtons(${index})">
-                        <p style="font-size: 12px; color: #666; margin-top: 5px;">Max: ${currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted} remaining</p>
-                    </div>
-
-                    <div id="results-${index}" style="display: none;">
+                    <div id="results-${index}" style="display: none; margin-top: 15px;">
                         <div style="background: #f0f4ff; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px solid #667eea;">
                             <p style="font-size: 13px; color: #4338ca; margin-bottom: 8px;"><strong>Quick Select:</strong></p>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
@@ -1171,7 +1173,7 @@
                             </div>
                             <p style="font-size: 11px; color: #6b7280; margin-top: 8px;">💡 Tip: Hold Shift and click two items to select range</p>
                         </div>
-                        <label>Mark Results (Click or Shift+Click for range):</label>
+                        <label>Mark Results for ${check.id} (Click or Shift+Click for range):</label>
                         <div class="result-buttons" id="result-buttons-${index}"></div>
                     </div>
 
@@ -1184,8 +1186,6 @@
                 currentInspection.checkResults.push({
                     checkData: check,
                     checkedQty: 0,
-                    suggestedSample: suggestedSample,
-                    inspectionLevel: inspectionLevel,
                     results: [],
                     failedItems: []
                 });
@@ -1194,65 +1194,57 @@
             updateProgress();
         }
 
-        function updateCheckLevel(checkIndex) {
-            const newLevel = document.getElementById(`check-level-${checkIndex}`).value;
-            const batchQty = currentSchedule.batchQty;
-            
-            if (newLevel && batchQty > 0) {
-                const result = calculateSampleSize(batchQty, newLevel);
-                currentInspection.checkResults[checkIndex].suggestedSample = result.sampleSize;
-                currentInspection.checkResults[checkIndex].inspectionLevel = newLevel;
-                
-                // Update display
-                const checkDiv = document.getElementById(`check-item-${checkIndex}`);
-                const suggestedElement = checkDiv.querySelector('.dbeafe');
-                if (suggestedElement) {
-                    suggestedElement.querySelector('span:nth-of-type(2)').textContent = result.sampleSize;
-                    suggestedElement.querySelector('span:nth-of-type(3)').textContent = `(Code ${result.letter})`;
-                }
-                
-                // Update placeholder
-                document.getElementById(`qty-${checkIndex}`).placeholder = `Min: ${result.sampleSize}`;
-            }
-        }
-
-        function updateResultButtons(checkIndex) {
-            const qty = parseInt(document.getElementById(`qty-${checkIndex}`).value) || 0;
+        function updateBatchCheckQty() {
+            const qty = parseInt(document.getElementById('batch-check-qty').value) || 0;
             const maxAllowed = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
             
             if (qty > maxAllowed) {
                 alert(`You can only check up to ${maxAllowed} items (remaining in batch)`);
-                document.getElementById(`qty-${checkIndex}`).value = maxAllowed;
+                document.getElementById('batch-check-qty').value = maxAllowed;
                 return;
             }
 
-            const resultsDiv = document.getElementById(`results-${checkIndex}`);
-            const buttonsDiv = document.getElementById(`result-buttons-${checkIndex}`);
-            
             if (qty > 0) {
-                resultsDiv.style.display = 'block';
-                buttonsDiv.innerHTML = '';
-                
-                for (let i = 0; i < qty; i++) {
-                    const btn = document.createElement('button');
-                    btn.className = 'result-btn';
-                    btn.textContent = i + 1;
-                    btn.onclick = function(e) {
-                        toggleResult(checkIndex, i, e.shiftKey);
-                    };
-                    buttonsDiv.appendChild(btn);
-                }
+                // Update all checks with the same quantity
+                currentInspection.checkResults.forEach((result, index) => {
+                    result.checkedQty = qty;
+                    
+                    // Show result buttons for each check
+                    const resultsDiv = document.getElementById(`results-${index}`);
+                    const buttonsDiv = document.getElementById(`result-buttons-${index}`);
+                    
+                    resultsDiv.style.display = 'block';
+                    buttonsDiv.innerHTML = '';
+                    
+                    for (let i = 0; i < qty; i++) {
+                        const btn = document.createElement('button');
+                        btn.className = 'result-btn';
+                        btn.textContent = i + 1;
+                        btn.onclick = function(e) {
+                            toggleResult(index, i, e.shiftKey);
+                        };
+                        buttonsDiv.appendChild(btn);
+                    }
 
-                currentInspection.checkResults[checkIndex].checkedQty = qty;
-                currentInspection.checkResults[checkIndex].results = new Array(qty).fill('pending');
-                lastClickedButton[checkIndex] = null;
-                
-                document.getElementById(`range-from-${checkIndex}`).max = qty;
-                document.getElementById(`range-to-${checkIndex}`).max = qty;
+                    result.results = new Array(qty).fill('pending');
+                    lastClickedButton[index] = null;
+                    
+                    document.getElementById(`range-from-${index}`).max = qty;
+                    document.getElementById(`range-to-${index}`).max = qty;
+                });
             } else {
-                resultsDiv.style.display = 'none';
+                // Hide all result sections
+                currentInspection.checkResults.forEach((result, index) => {
+                    document.getElementById(`results-${index}`).style.display = 'none';
+                });
             }
+            
             updateProgress();
+        }
+
+        function updateCheckLevel(checkIndex) {
+            // This function is no longer needed for per-check level
+            // Level is set globally at the schedule level
         }
 
         function toggleResult(checkIndex, itemIndex, shiftKey) {
@@ -1446,11 +1438,8 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
             
-            // Calculate total checks done today
-            let totalCheckedToday = 0;
-            currentInspection.checkResults.forEach(result => {
-                totalCheckedToday += result.checkedQty;
-            });
+            // Get the batch check qty (same for all checks)
+            const totalCheckedToday = parseInt(document.getElementById('batch-check-qty').value) || 0;
 
             currentInspection.checkResults.forEach((result, checkIndex) => {
                 const failedItems = [];
@@ -1477,6 +1466,7 @@
                 inspectorName: currentSchedule.inspectorName,
                 station: currentSchedule.station,
                 substation: currentSchedule.substation,
+                inspectionLevel: currentSchedule.inspectionLevel || '',
                 previouslyCompleted: currentSchedule.checksCompleted,
                 checkedToday: totalCheckedToday,
                 checks: currentInspection.checkResults.map(result => ({
