@@ -606,6 +606,19 @@
 
                 <div id="inspection-summary" class="schedule-summary"></div>
 
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 10px;">📋 Printable Control Sheet Generated</h4>
+                    <p style="margin-bottom: 10px;">A printable quality control sheet has been created in the <strong>"Control Sheets"</strong> tab of your Google Spreadsheet.</p>
+                    <p style="font-size: 13px; color: #1e40af;">
+                        <strong>To print:</strong><br>
+                        1. Open your Google Spreadsheet<br>
+                        2. Go to "Control Sheets" tab<br>
+                        3. Find your inspection (ID: <span id="inspection-id-display"></span>)<br>
+                        4. File → Print → Print current sheet<br>
+                        5. Sign and file for auditing
+                    </p>
+                </div>
+
                 <button class="btn btn-primary" onclick="startNewInspection()">Start New Inspection</button>
             </div>
         </div>
@@ -1511,8 +1524,10 @@
 
             const sheetUrl = localStorage.getItem('googleSheetsUrl');
             
+            let inspectionId = 'INS-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            
             try {
-                await fetch(sheetUrl, {
+                const response = await fetch(sheetUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain',
@@ -1520,15 +1535,20 @@
                     body: JSON.stringify(sheetData),
                     redirect: 'follow'
                 });
+                
+                const result = await response.json();
+                if (result.inspectionId) {
+                    inspectionId = result.inspectionId;
+                }
             } catch (error) {
                 console.log('Fetch error:', error);
             }
             
-            displaySummary(totalCheckedToday);
+            displaySummary(totalCheckedToday, inspectionId);
             showScreen('screen-success');
         }
 
-        function displaySummary(totalCheckedToday) {
+        function displaySummary(totalCheckedToday, inspectionId) {
             let totalPass = 0;
             let totalFail = 0;
 
@@ -1542,9 +1562,13 @@
             const isComplete = remaining === 0;
 
             document.getElementById('success-message').innerHTML = `
-                Checked ${totalCheckedToday} items today.<br>
-                ${isComplete ? '<strong style="color: #10b981;">✓ Sample Complete!</strong>' : `<strong>${remaining} items remaining in sample.</strong>`}
+                Checked ${totalCheckedToday} items today at <strong>${currentSchedule.station}</strong>.<br>
+                ${isComplete ? '<strong style="color: #10b981;">✓ This station is complete!</strong>' : `<strong>${remaining} items remaining at this station.</strong>`}
             `;
+            
+            if (inspectionId) {
+                document.getElementById('inspection-id-display').textContent = inspectionId;
+            }
 
             document.getElementById('inspection-summary').innerHTML = `
                 <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
@@ -1557,19 +1581,23 @@
                     <span>${currentSchedule.partNo}</span>
                 </div>
                 <div class="summary-item">
+                    <strong>Station:</strong>
+                    <span>${currentSchedule.station}</span>
+                </div>
+                <div class="summary-item">
                     <strong>Batch Qty:</strong>
                     <span>${currentSchedule.batchQty.toLocaleString()}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Sample Size (ISO 2859):</strong>
-                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.sampleSize} (Code ${currentSchedule.sampleCodeLetter})</span>
+                    <strong>Sample Size (this station):</strong>
+                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Checked Today:</strong>
+                    <strong>Inspected Today:</strong>
                     <span style="color: #667eea; font-weight: 600;">${totalCheckedToday}</span>
                 </div>
                 <div class="summary-item">
-                    <strong>Total Completed:</strong>
+                    <strong>Total at Station:</strong>
                     <span style="color: #10b981; font-weight: 600;">${newTotal}</span>
                 </div>
                 <div class="summary-item">
@@ -1583,6 +1611,10 @@
                 </div>
                 <div class="summary-item">
                     <strong>Failed Today:</strong>
+                    <span style="color: #ef4444; font-weight: 600;">${totalFail}</span>
+                </div>
+            `;
+        }
                     <span style="color: #ef4444; font-weight: 600;">${totalFail}</span>
                 </div>
             `;
