@@ -476,8 +476,8 @@
 
                 <div class="form-group">
                     <label>Schedule Number *</label>
-                    <input type="text" id="schedule-no" required onblur="checkExistingSchedule()">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px;">We'll check if this schedule exists</p>
+                    <input type="text" id="schedule-no" required onchange="checkExistingSchedule()">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Same schedule can go through multiple stations</p>
                 </div>
 
                 <div id="existing-schedule-alert" style="display: none;"></div>
@@ -500,14 +500,14 @@
                 </div>
 
                 <div id="sample-size-display" style="display: none;" class="alert alert-info">
-                    <h4 style="margin-bottom: 10px;">📊 Suggested Sample Size (ISO 2859-1)</h4>
+                    <h4 style="margin-bottom: 10px;">📊 Sample Size (ISO 2859-1) - PER STATION</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                         <div>
                             <strong>Batch Size:</strong>
                             <div id="display-batch-size" style="font-size: 18px; color: #1e40af;">-</div>
                         </div>
                         <div>
-                            <strong>Sample Size:</strong>
+                            <strong>Sample/Station:</strong>
                             <div id="display-sample-size" style="font-size: 18px; color: #059669; font-weight: 700;">-</div>
                         </div>
                         <div>
@@ -517,15 +517,14 @@
                     </div>
                     <div style="padding: 10px; background: #fef3c7; border-radius: 6px; border: 1px solid #f59e0b;">
                         <p style="font-size: 12px; color: #92400e; margin: 0;">
-                            <strong>💡 Note:</strong> This is a <strong>suggested minimum</strong>. You can inspect more items if desired.
-                            Sample size will be shown for each check individually.
+                            <strong>💡 Note:</strong> This sample size applies to <strong>THIS STATION ONLY</strong>. Each station needs this many samples checked.
                         </p>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Station *</label>
-                    <select id="station" onchange="updateStationChecks()">
+                    <select id="station" onchange="updateStationChecks(); checkExistingSchedule();">
                         <option value="">Select Station</option>
                         <option value="INNER CUTTING">INNER CUTTING</option>
                         <option value="OUTER CUTTING">OUTER CUTTING</option>
@@ -913,29 +912,50 @@
             container.innerHTML = '';
 
             schedules.forEach(schedule => {
-                const isComplete = schedule.status === 'Complete';
-                const sampleSize = schedule.sampleSize || schedule.batchQty;
-                const progressPercent = sampleSize > 0 ? (schedule.samplesInspected / sampleSize * 100).toFixed(0) : 0;
+                const hasStations = schedule.stationProgress && schedule.stationProgress.length > 0;
+                const completedCount = schedule.stationProgress ? schedule.stationProgress.filter(s => s.status === 'Complete').length : 0;
+                const totalStations = schedule.stationProgress ? schedule.stationProgress.length : 0;
 
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'history-item' + (isComplete ? ' complete' : '');
+                itemDiv.className = 'history-item';
+                
+                let stationHTML = '';
+                if (hasStations) {
+                    stationHTML = '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;"><strong>Station Progress:</strong><div style="margin-top: 10px;">';
+                    schedule.stationProgress.forEach(station => {
+                        const isComplete = station.status === 'Complete';
+                        const percent = station.sampleSize > 0 ? ((station.samplesInspected / station.sampleSize) * 100).toFixed(0) : 0;
+                        stationHTML += `
+                            <div style="background: ${isComplete ? '#f0fdf4' : '#fef3c7'}; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 2px solid ${isComplete ? '#10b981' : '#f59e0b'};">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong>${station.station}</strong>
+                                    <span style="font-size: 12px; padding: 2px 8px; border-radius: 10px; background: ${isComplete ? '#10b981' : '#f59e0b'}; color: white;">${station.status}</span>
+                                </div>
+                                <div style="font-size: 13px; color: #666; margin-top: 5px;">${station.samplesInspected} / ${station.sampleSize} samples (${percent}%)</div>
+                                <div style="background: #e5e7eb; height: 6px; border-radius: 10px; margin-top: 8px; overflow: hidden;">
+                                    <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${percent}%;"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    stationHTML += '</div></div>';
+                }
+                
                 itemDiv.innerHTML = `
                     <div class="history-header">
                         <div class="history-title">Schedule: ${schedule.scheduleNo}</div>
-                        <span class="history-status ${isComplete ? 'status-complete' : 'status-in-progress'}">
-                            ${schedule.status}
+                        <span class="history-status status-in-progress">
+                            ${completedCount}/${totalStations} Stations
                         </span>
                     </div>
                     <div class="history-details">
                         <div><strong>Part No:</strong> ${schedule.partNo}</div>
-                        <div><strong>Batch Qty (Production):</strong> ${schedule.batchQty.toLocaleString()}</div>
-                        <div><strong>Sample Size (Inspect):</strong> ${sampleSize} ${schedule.inspectionLevel ? '(' + schedule.inspectionLevel + ')' : ''}</div>
-                        <div><strong>Progress:</strong> ${schedule.samplesInspected} / ${sampleSize} (${progressPercent}%)</div>
-                        <div style="background: #e5e7eb; height: 8px; border-radius: 10px; margin: 10px 0; overflow: hidden;">
-                            <div style="background: ${isComplete ? '#10b981' : '#667eea'}; height: 100%; width: ${progressPercent}%;"></div>
-                        </div>
+                        <div><strong>Batch Qty:</strong> ${schedule.batchQty.toLocaleString()}</div>
+                        ${schedule.completedStations ? `<div><strong>✓ Completed:</strong> ${schedule.completedStations}</div>` : ''}
+                        <div><strong>Last Station:</strong> ${schedule.lastStationChecked}</div>
                         <div><strong>Last Updated:</strong> ${new Date(schedule.lastUpdated).toLocaleString()}</div>
                         <div><strong>Last Inspector:</strong> ${schedule.lastInspector}</div>
+                        ${stationHTML}
                     </div>
                 `;
                 container.appendChild(itemDiv);
@@ -995,9 +1015,10 @@
         async function checkExistingSchedule() {
             const scheduleNo = document.getElementById('schedule-no').value.trim();
             const partNo = document.getElementById('part-no').value.trim();
+            const station = document.getElementById('station').value;
             const alertDiv = document.getElementById('existing-schedule-alert');
             
-            if (!scheduleNo || !partNo) {
+            if (!scheduleNo || !partNo || !station) {
                 alertDiv.style.display = 'none';
                 return;
             }
@@ -1006,8 +1027,8 @@
             if (!sheetUrl) return;
 
             try {
-                // Query for existing schedule
-                const queryUrl = `${sheetUrl}?action=lookup&scheduleNo=${encodeURIComponent(scheduleNo)}&partNo=${encodeURIComponent(partNo)}`;
+                // Query for existing schedule at this station
+                const queryUrl = `${sheetUrl}?action=lookup&scheduleNo=${encodeURIComponent(scheduleNo)}&partNo=${encodeURIComponent(partNo)}&station=${encodeURIComponent(station)}`;
                 const response = await fetch(queryUrl);
                 const data = await response.json();
 
@@ -1021,19 +1042,16 @@
                     alertDiv.className = 'alert alert-info';
                     alertDiv.style.display = 'block';
                     alertDiv.innerHTML = `
-                        <h4 style="margin-bottom: 10px;">📋 Existing Schedule Found!</h4>
+                        <h4 style="margin-bottom: 10px;">📋 Station Progress Found!</h4>
+                        <p><strong>Station:</strong> ${data.station}</p>
                         <p><strong>Part No:</strong> ${data.partNo}</p>
-                        <p><strong>Batch Qty (Production):</strong> ${data.batchQty.toLocaleString()}</p>
-                        <p><strong>Sample Size (Inspect):</strong> ${data.sampleSize}</p>
+                        <p><strong>Sample Size (this station):</strong> ${data.sampleSize}</p>
                         <p><strong>Samples Inspected:</strong> ${data.samplesInspected} / ${data.sampleSize}</p>
-                        <p><strong>Remaining Samples:</strong> ${data.remainingSamples}</p>
-                        <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ You can continue from where you left off!</p>
+                        <p><strong>Remaining:</strong> ${data.remainingSamples}</p>
+                        <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ Continue inspection at this station!</p>
                     `;
 
                     // Pre-fill data
-                    document.getElementById('batch-qty').value = data.batchQty;
-                    document.getElementById('batch-qty').readOnly = true;
-                    
                     if (data.inspectionLevel) {
                         document.getElementById('inspection-level').value = data.inspectionLevel;
                     }
@@ -1042,7 +1060,6 @@
                     updateSampleSize();
                 } else {
                     alertDiv.style.display = 'none';
-                    document.getElementById('batch-qty').readOnly = false;
                     currentSchedule.existingData = null;
                 }
             } catch (error) {
