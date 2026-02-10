@@ -607,15 +607,17 @@
                 <div id="inspection-summary" class="schedule-summary"></div>
 
                 <div class="alert alert-info" style="margin-top: 20px;">
-                    <h4 style="margin-bottom: 10px;">📋 Printable Control Sheet Generated</h4>
-                    <p style="margin-bottom: 10px;">A printable quality control sheet has been created in the <strong>"Control Sheets"</strong> tab of your Google Spreadsheet.</p>
+                    <h4 style="margin-bottom: 10px;">📋 Control Sheet Updated</h4>
+                    <p style="margin-bottom: 10px;">The control sheet for <strong>Schedule ${currentSchedule.scheduleNo}</strong> has been updated in the <strong>"Control Sheets"</strong> tab.</p>
+                    <p style="font-size: 13px; color: #1e40af; margin-bottom: 10px;">
+                        <strong>This sheet shows ALL stations done so far for this schedule</strong> with checkboxes for each sample.
+                    </p>
                     <p style="font-size: 13px; color: #1e40af;">
                         <strong>To print:</strong><br>
-                        1. Open your Google Spreadsheet<br>
-                        2. Go to "Control Sheets" tab<br>
-                        3. Find your inspection (ID: <span id="inspection-id-display"></span>)<br>
-                        4. File → Print → Print current sheet<br>
-                        5. Sign and file for auditing
+                        1. Open Google Spreadsheet → "Control Sheets" tab<br>
+                        2. Find Schedule: <strong id="schedule-no-display"></strong><br>
+                        3. File → Print<br>
+                        4. Sign and file for auditing
                     </p>
                 </div>
 
@@ -1569,6 +1571,8 @@
             if (inspectionId) {
                 document.getElementById('inspection-id-display').textContent = inspectionId;
             }
+            
+            document.getElementById('schedule-no-display').textContent = currentSchedule.scheduleNo;
 
             document.getElementById('inspection-summary').innerHTML = `
                 <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
