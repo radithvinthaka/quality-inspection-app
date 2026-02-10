@@ -1560,6 +1560,7 @@
                     checkedQty: result.checkedQty,
                     pass: result.results.filter(r => r === 'pass').length,
                     fail: result.results.filter(r => r === 'fail').length,
+                    results: result.results, // Individual sample results: ['pass', 'fail', 'pass', ...]
                     failedItems: result.failedItems || []
                 }))
             };
@@ -1600,6 +1601,11 @@
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Inspection';
             showScreen('screen-success');
+            
+            // Auto-redirect to home after 3 seconds
+            setTimeout(() => {
+                goToStart();
+            }, 3000);
         }
 
         function displaySummary(totalCheckedToday, inspectionId, submissionSuccess) {
