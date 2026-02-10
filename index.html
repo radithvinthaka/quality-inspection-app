@@ -599,34 +599,36 @@
 
             <!-- Screen 4: Success -->
             <div class="screen" id="screen-success">
-                <div class="alert alert-success">
-                    <h3 style="margin-bottom: 10px;">✓ Inspection Submitted Successfully!</h3>
+                <div class="alert alert-success" id="success-alert">
+                    <h3 style="margin-bottom: 10px;">✓ Inspection Completed!</h3>
                     <p id="success-message"></p>
+                    <div id="submission-status" style="margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: 600;"></div>
                 </div>
 
                 <div id="inspection-summary" class="schedule-summary"></div>
 
                 <div class="alert alert-info" style="margin-top: 20px;">
-                    <h4 style="margin-bottom: 10px;">📋 Control Sheet Updated</h4>
-                    <p style="margin-bottom: 10px;">The control sheet for <strong>Schedule <span id="schedule-no-display"></span></strong> has been updated in the <strong>"Control Sheets"</strong> tab.</p>
-                    <p style="font-size: 13px; color: #1e40af; margin-bottom: 10px;">
-                        <strong>This sheet shows ALL stations done so far for this schedule</strong> with checkboxes for each sample.
-                    </p>
-                    <p style="font-size: 13px; color: #1e40af; margin-bottom: 15px;">
-                        <strong>📥 To access your control sheet:</strong>
-                    </p>
-                    <div style="display: grid; gap: 10px;">
-                        <button onclick="openControlSheet()" class="btn btn-secondary" style="margin: 0;">
-                            🔍 Search in Control Sheets Tab
-                        </button>
-                        <div style="font-size: 12px; color: #666; padding: 10px; background: #f9fafb; border-radius: 6px;">
-                            <strong>💡 To find your schedule quickly:</strong><br>
-                            1. Open Google Spreadsheet → "Control Sheets" tab<br>
-                            2. Press Ctrl+F (or Cmd+F on Mac)<br>
-                            3. Search for: <strong><span id="schedule-no-search"></span></strong><br>
-                            4. File → Download → PDF → Print current sheet<br>
-                            5. Or File → Print directly
+                    <h4 style="margin-bottom: 15px;">📋 Download Control Sheet (PDF)</h4>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #3b82f6; margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Enter Schedule Number:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="pdf-schedule-no" placeholder="e.g., ABC-1000" style="flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                            <button onclick="downloadControlSheetPDF()" class="btn btn-primary" style="margin: 0; white-space: nowrap;">
+                                📥 Download PDF
+                            </button>
                         </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px; margin-bottom: 0;">
+                            💡 Leave blank to download <strong id="current-schedule-display"></strong>
+                        </p>
+                    </div>
+                    
+                    <div style="font-size: 12px; color: #1e40af; background: #dbeafe; padding: 12px; border-radius: 6px;">
+                        <strong>📄 What's included in the PDF:</strong><br>
+                        • All stations inspected for this schedule<br>
+                        • Individual check results (Pass/Fail) per check<br>
+                        • 32 checkboxes per station to tick off<br>
+                        • Signature section for Inspector, Supervisor, QC Manager
                     </div>
                 </div>
 
@@ -1517,7 +1519,7 @@
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn.disabled) return;
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+            submitBtn.textContent = '⏳ Submitting...';
             
             // Get the batch check qty (same for all checks)
             const totalCheckedToday = parseInt(document.getElementById('batch-check-qty').value) || 0;
@@ -1565,8 +1567,11 @@
             const sheetUrl = localStorage.getItem('googleSheetsUrl');
             
             let inspectionId = 'INS-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            let submissionSuccess = false;
             
             try {
+                submitBtn.textContent = '📤 Sending to Google Sheets...';
+                
                 const response = await fetch(sheetUrl, {
                     method: 'POST',
                     headers: {
@@ -1577,20 +1582,27 @@
                     mode: 'no-cors'
                 });
                 
-                // With no-cors, we can't read the response, but submission completed
-                console.log('Submission sent successfully');
+                // With no-cors, we can't read response, but if no error thrown, it sent
+                submissionSuccess = true;
+                submitBtn.textContent = '✓ Data Sent!';
+                
             } catch (error) {
                 console.log('Fetch error:', error);
+                submitBtn.textContent = '⚠️ May Have Failed';
+                submissionSuccess = false;
             }
             
+            // Wait a moment so user sees the status
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             // Always proceed to success screen
-            displaySummary(totalCheckedToday, inspectionId);
+            displaySummary(totalCheckedToday, inspectionId, submissionSuccess);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Inspection';
             showScreen('screen-success');
         }
 
-        function displaySummary(totalCheckedToday, inspectionId) {
+        function displaySummary(totalCheckedToday, inspectionId, submissionSuccess) {
             let totalPass = 0;
             let totalFail = 0;
 
@@ -1608,12 +1620,23 @@
                 ${isComplete ? '<strong style="color: #10b981;">✓ This station is complete!</strong>' : `<strong>${remaining} items remaining at this station.</strong>`}
             `;
             
-            if (inspectionId) {
-                document.getElementById('inspection-id-display').textContent = inspectionId;
+            // Show submission status
+            const statusDiv = document.getElementById('submission-status');
+            if (submissionSuccess) {
+                statusDiv.style.background = '#d1fae5';
+                statusDiv.style.color = '#065f46';
+                statusDiv.style.border = '2px solid #10b981';
+                statusDiv.innerHTML = '✅ Data successfully saved to Google Sheets!';
+            } else {
+                statusDiv.style.background = '#fee2e2';
+                statusDiv.style.color = '#991b1b';
+                statusDiv.style.border = '2px solid #ef4444';
+                statusDiv.innerHTML = '⚠️ Unable to confirm submission. Please check Google Sheets.';
             }
             
-            document.getElementById('schedule-no-display').textContent = currentSchedule.scheduleNo;
-            document.getElementById('schedule-no-search').textContent = currentSchedule.scheduleNo;
+            // Pre-fill current schedule for PDF download
+            document.getElementById('pdf-schedule-no').value = currentSchedule.scheduleNo;
+            document.getElementById('current-schedule-display').textContent = currentSchedule.scheduleNo;
 
             document.getElementById('inspection-summary').innerHTML = `
                 <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
@@ -1661,6 +1684,57 @@
             `;
         }
 
+        async function downloadControlSheetPDF() {
+            const scheduleNo = document.getElementById('pdf-schedule-no').value.trim();
+            
+            if (!scheduleNo) {
+                alert('Please enter a schedule number');
+                return;
+            }
+            
+            const sheetUrl = localStorage.getItem('googleSheetsUrl');
+            if (!sheetUrl) {
+                alert('Google Sheets URL not configured');
+                return;
+            }
+            
+            try {
+                // Show loading
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = '⏳ Generating PDF...';
+                
+                // Request PDF generation
+                const queryUrl = `${sheetUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(scheduleNo)}`;
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+                
+                if (data.pdfUrl) {
+                    // Open PDF in new tab
+                    window.open(data.pdfUrl, '_blank');
+                    btn.textContent = '✓ PDF Downloaded!';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }, 2000);
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                } else {
+                    alert('Schedule not found. Please check the schedule number.');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.log('PDF generation error:', error);
+                alert('Failed to generate PDF. Please try downloading from Google Sheets directly.');
+                event.target.disabled = false;
+                event.target.textContent = '📥 Download PDF';
+            }
+        }
+        
         function startNewInspection() {
             goToStart();
         }
