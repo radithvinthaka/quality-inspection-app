@@ -440,7 +440,35 @@
                     <p>This app is not configured yet. Please contact your administrator.</p>
                 </div>
                 <button class="btn btn-primary" onclick="startInspection()">Start Inspection</button>
+                <button class="btn btn-secondary" onclick="showDownloadControlSheet()">📥 Download Control Sheet</button>
                 <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
+            </div>
+
+            <!-- Screen 1.4: Download Control Sheet -->
+            <div class="screen" id="screen-download-control">
+                <h2 style="margin-bottom: 20px;">📥 Download Control Sheet</h2>
+                
+                <div class="alert alert-info">
+                    <p style="margin-bottom: 10px;">Enter a schedule number to download its quality control sheet as PDF.</p>
+                    <p style="font-size: 13px; color: #1e40af; margin: 0;">
+                        The PDF will include all stations inspected, checkboxes for each sample (with ✗ for failed), and signature sections.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label>Schedule Number *</label>
+                    <input type="text" id="download-schedule-no" placeholder="e.g., ABC-1000" style="font-size: 18px; padding: 15px;">
+                </div>
+
+                <button class="btn btn-primary" onclick="downloadSchedulePDF()">
+                    📥 Generate & Download PDF
+                </button>
+                
+                <button class="btn btn-secondary" onclick="goToStart()">
+                    ← Back to Home
+                </button>
+                
+                <div id="download-status" style="margin-top: 20px;"></div>
             </div>
 
             <!-- Screen 1.5: History -->
@@ -1690,6 +1718,49 @@
             `;
         }
 
+        function showDownloadControlSheet() {
+            showScreen('screen-download-control');
+            document.getElementById('download-schedule-no').focus();
+        }
+        
+        async function downloadSchedulePDF() {
+            const scheduleNo = document.getElementById('download-schedule-no').value.trim();
+            const statusDiv = document.getElementById('download-status');
+            
+            if (!scheduleNo) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Please enter a schedule number</div>';
+                return;
+            }
+            
+            const sheetUrl = localStorage.getItem('googleSheetsUrl');
+            if (!sheetUrl) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Google Sheets URL not configured. Please check settings.</div>';
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div class="alert alert-info">⏳ Generating PDF for schedule ' + scheduleNo + '...</div>';
+                
+                // Request PDF generation
+                const queryUrl = `${sheetUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(scheduleNo)}`;
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+                
+                if (data.pdfUrl) {
+                    statusDiv.innerHTML = '<div class="alert alert-success">✓ PDF Generated Successfully!<br><br><a href="' + data.pdfUrl + '" target="_blank" class="btn btn-primary" style="margin: 10px 0;">📥 Open PDF</a></div>';
+                    // Also open automatically
+                    window.open(data.pdfUrl, '_blank');
+                } else if (data.error) {
+                    statusDiv.innerHTML = '<div class="alert alert-warning">Error: ' + data.error + '</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-warning">Schedule "' + scheduleNo + '" not found in control sheets.<br><br>Make sure you\'ve completed at least one inspection for this schedule.</div>';
+                }
+            } catch (error) {
+                console.log('PDF generation error:', error);
+                statusDiv.innerHTML = '<div class="alert alert-warning">Failed to generate PDF. Please check your internet connection and try again.</div>';
+            }
+        }
+        
         async function downloadControlSheetPDF() {
             const scheduleNo = document.getElementById('pdf-schedule-no').value.trim();
             
