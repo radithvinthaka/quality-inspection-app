@@ -1024,10 +1024,11 @@
                 return;
             }
 
-            const filtered = allHistory.filter(schedule => 
-                schedule.scheduleNo.toLowerCase().includes(filterText) ||
-                schedule.partNo.toLowerCase().includes(filterText)
-            );
+            const filtered = allHistory.filter(schedule => {
+                const scheduleStr = String(schedule.scheduleNo || '').toLowerCase();
+                const partStr = String(schedule.partNo || '').toLowerCase();
+                return scheduleStr.includes(filterText) || partStr.includes(filterText);
+            });
 
             if (filtered.length > 0) {
                 displayHistory(filtered);
@@ -1035,7 +1036,7 @@
             } else {
                 document.getElementById('history-container').innerHTML = '';
                 document.getElementById('history-empty').style.display = 'block';
-                document.getElementById('history-empty').textContent = 'No matching schedules found.';
+                document.getElementById('history-empty').textContent = 'No matching schedules found for "' + filterText + '"';
             }
         }
 
