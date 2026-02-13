@@ -422,6 +422,211 @@
             color: #666;
             line-height: 1.8;
         }
+
+        /* DASHBOARD STYLES */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .dashboard-section {
+            display: none;
+        }
+
+        .dashboard-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .kpi-change {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .kpi-change.positive {
+            color: #10b981;
+        }
+
+        .kpi-change.negative {
+            color: #ef4444;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .station-bar {
+            margin-bottom: 15px;
+        }
+
+        .station-bar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .station-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sigma-value {
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .sigma-excellent {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sigma-good {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .sigma-poor {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .bar-fill-container {
+            background: #e5e7eb;
+            height: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .print-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .print-btn:hover {
+            background: #5568d3;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+            .header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .btn, .dashboard-tabs, .settings-icon {
+                display: none !important;
+            }
+            .chart-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .date-filter select,
+        .date-filter input[type="date"] {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -440,8 +645,158 @@
                     <p>This app is not configured yet. Please contact your administrator.</p>
                 </div>
                 <button class="btn btn-primary" onclick="startInspection()">Start Inspection</button>
+                <button class="btn btn-primary" onclick="showDashboard()">📊 Dashboard & Reports</button>
                 <button class="btn btn-secondary" onclick="showDownloadControlSheet()">📥 Download Control Sheet</button>
                 <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
+            </div>
+
+            <!-- DASHBOARD SCREEN -->
+            <div class="screen" id="screen-dashboard">
+                <div class="dashboard-container">
+                    <h2 style="margin-bottom: 20px;">📊 Quality Dashboard</h2>
+                    
+                    <div class="date-filter">
+                        <label style="margin: 0;">Period:</label>
+                        <select id="dashboard-period" onchange="loadDashboardData()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <input type="date" id="date-from" style="display: none;">
+                        <input type="date" id="date-to" style="display: none;">
+                        <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+                    </div>
+
+                    <div class="dashboard-tabs">
+                        <button class="dashboard-tab active" onclick="showDashboardTab('overall')">Overall</button>
+                        <button class="dashboard-tab" onclick="showDashboardTab('stations')">By Station</button>
+                        <button class="dashboard-tab" onclick="showDashboardTab('defects')">Defect Analysis</button>
+                        <button class="dashboard-tab" onclick="showDashboardTab('trends')">Trends</button>
+                    </div>
+
+                    <!-- OVERALL TAB -->
+                    <div class="dashboard-section active" id="dashboard-overall">
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Overall Sigma Level</div>
+                                <div class="kpi-value" id="overall-sigma">-</div>
+                                <div class="kpi-change positive" id="sigma-change">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Pass Rate</div>
+                                <div class="kpi-value" id="overall-pass-rate">-</div>
+                                <div class="kpi-change" id="pass-rate-change">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Total Inspected</div>
+                                <div class="kpi-value" id="total-inspected">-</div>
+                                <div class="kpi-change" id="inspected-change">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Defect Rate</div>
+                                <div class="kpi-value" id="defect-rate">-</div>
+                                <div class="kpi-change negative" id="defect-change">-</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Sigma Level by Station</div>
+                            <div id="sigma-by-station"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Station Performance Summary</div>
+                            <div id="station-summary"></div>
+                        </div>
+                    </div>
+
+                    <!-- STATIONS TAB -->
+                    <div class="dashboard-section" id="dashboard-stations">
+                        <div class="form-group">
+                            <label>Select Station:</label>
+                            <select id="station-selector" onchange="loadStationDetails()">
+                                <option value="">All Stations</option>
+                                <option value="INNER CUTTING">INNER CUTTING</option>
+                                <option value="OUTER CUTTING">OUTER CUTTING</option>
+                                <option value="SLEEVE CUTTING">SLEEVE CUTTING</option>
+                                <option value="GLUING">GLUING</option>
+                                <option value="HEAT EMBORSING">HEAT EMBORSING</option>
+                                <option value="SWAGING">SWAGING</option>
+                                <option value="ASSEMBLY">ASSEMBLY</option>
+                                <option value="MANUAL BUMPING">MANUAL BUMPING</option>
+                                <option value="DIE CASTING">DIE CASTING</option>
+                            </select>
+                        </div>
+
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Station Sigma</div>
+                                <div class="kpi-value" id="station-sigma">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Station Pass Rate</div>
+                                <div class="kpi-value" id="station-pass-rate">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Samples Inspected</div>
+                                <div class="kpi-value" id="station-inspected">-</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Defects Found</div>
+                                <div class="kpi-value" id="station-defects">-</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Top Checks at This Station</div>
+                            <div id="station-checks"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Inspector Performance</div>
+                            <div id="inspector-performance"></div>
+                        </div>
+                    </div>
+
+                    <!-- DEFECTS TAB -->
+                    <div class="dashboard-section" id="dashboard-defects">
+                        <div class="chart-container">
+                            <div class="chart-title">Pareto Chart - Top 10 Defect Types</div>
+                            <div id="pareto-chart"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Defects by Station (Distribution)</div>
+                            <div id="defects-by-station"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Recent Failed Items</div>
+                            <div id="recent-failures"></div>
+                        </div>
+                    </div>
+
+                    <!-- TRENDS TAB -->
+                    <div class="dashboard-section" id="dashboard-trends">
+                        <div class="chart-container">
+                            <div class="chart-title">Daily Pass Rate Trend (Last 30 Days)</div>
+                            <div id="daily-trend"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Monthly Sigma Level Trend</div>
+                            <div id="monthly-sigma-trend"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Inspection Volume vs Quality</div>
+                            <div id="volume-quality"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="goToStart()">← Back to Home</button>
+                </div>
             </div>
 
             <!-- Screen 1.4: Download Control Sheet -->
@@ -698,10 +1053,6 @@
 
         // ISO 2859-1 Sample Size Code Letters (General Inspection Level II)
         const iso2859SampleSizes = {
-            // ISO 2859-1 Sample Size Table
-            // Level I (S-1) - Reduced inspection
-            // Level II (S-2) - Normal inspection (General Inspection Level II)
-            // Level III (S-3) - Tightened inspection
             levelI: [
                 { min: 2, max: 8, letter: 'A', sampleSize: 2 },
                 { min: 9, max: 15, letter: 'A', sampleSize: 2 },
@@ -762,7 +1113,7 @@
             } else if (level === 'III') {
                 ranges = iso2859SampleSizes.levelIII;
             } else {
-                ranges = iso2859SampleSizes.levelII; // Default
+                ranges = iso2859SampleSizes.levelII;
             }
             
             for (let range of ranges) {
@@ -776,6 +1127,29 @@
                 }
             }
             return { sampleSize: 0, letter: 'N/A', batchSize: batchSize, level: level };
+        }
+
+        // Calculate Sigma Level
+        function calculateSigma(defects, opportunities) {
+            if (opportunities === 0) return 0;
+            
+            const dpu = defects / opportunities; // Defects Per Unit
+            const dpmo = dpu * 1000000; // Defects Per Million Opportunities
+            
+            // Approximate sigma using inverse normal distribution
+            // For simplicity, using lookup table
+            if (dpmo >= 691462) return 0;
+            if (dpmo >= 308538) return 1.0;
+            if (dpmo >= 158655) return 1.5;
+            if (dpmo >= 66807) return 2.0;
+            if (dpmo >= 22750) return 2.5;
+            if (dpmo >= 6210) return 3.0;
+            if (dpmo >= 1350) return 3.5;
+            if (dpmo >= 233) return 4.0;
+            if (dpmo >= 32) return 4.5;
+            if (dpmo >= 3.4) return 5.0;
+            if (dpmo >= 0.34) return 5.5;
+            return 6.0;
         }
 
         const stationChecks = {
@@ -834,6 +1208,7 @@
         };
 
         let lastClickedButton = {};
+        let dashboardData = null;
 
         window.onload = function() {
             checkConfiguration();
@@ -853,7 +1228,6 @@
                 
                 displayDiv.style.display = 'block';
                 
-                // Store sample size and level for later use
                 currentSchedule.sampleSize = result.sampleSize;
                 currentSchedule.sampleCodeLetter = result.letter;
                 currentSchedule.inspectionLevel = level;
@@ -888,8 +1262,189 @@
             showScreen('screen-initial-data');
         }
 
+        // DASHBOARD FUNCTIONS
+        function showDashboard() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            if (!url) {
+                alert('This app is not configured. Please contact your administrator.');
+                return;
+            }
+            showScreen('screen-dashboard');
+            loadDashboardData();
+        }
+
+        function showDashboardTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.dashboard-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('dashboard-' + tabName).classList.add('active');
+
+            // Load specific data
+            if (tabName === 'stations') {
+                loadStationDetails();
+            }
+        }
+
+        async function loadDashboardData() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            if (!url) return;
+
+            try {
+                // For now, we'll use mock data
+                // In production, fetch from Google Sheets
+                dashboardData = generateMockDashboardData();
+                
+                renderOverallMetrics();
+                renderSigmaByStation();
+                renderStationSummary();
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        function generateMockDashboardData() {
+            // This would normally come from Google Sheets
+            return {
+                overall: {
+                    sigma: 4.2,
+                    sigmaChange: 0.3,
+                    passRate: 97.8,
+                    passRateChange: 1.2,
+                    totalInspected: 1543,
+                    inspectedChange: 15,
+                    defectRate: 2.2,
+                    defectChange: -0.5
+                },
+                stations: [
+                    { name: 'INNER CUTTING', sigma: 4.5, inspected: 250, passed: 246, failed: 4 },
+                    { name: 'OUTER CUTTING', sigma: 3.8, inspected: 200, passed: 192, failed: 8 },
+                    { name: 'SLEEVE CUTTING', sigma: 4.1, inspected: 180, passed: 176, failed: 4 },
+                    { name: 'GLUING', sigma: 3.2, inspected: 220, passed: 210, failed: 10 },
+                    { name: 'SWAGING', sigma: 4.3, inspected: 193, passed: 189, failed: 4 },
+                    { name: 'ASSEMBLY', sigma: 4.6, inspected: 300, passed: 297, failed: 3 },
+                    { name: 'DIE CASTING', sigma: 3.9, inspected: 200, passed: 194, failed: 6 }
+                ]
+            };
+        }
+
+        function renderOverallMetrics() {
+            if (!dashboardData) return;
+
+            const d = dashboardData.overall;
+            
+            document.getElementById('overall-sigma').textContent = d.sigma.toFixed(1) + 'σ';
+            document.getElementById('sigma-change').textContent = '↑ ' + d.sigmaChange.toFixed(1) + 'σ vs last month';
+            document.getElementById('sigma-change').className = 'kpi-change positive';
+
+            document.getElementById('overall-pass-rate').textContent = d.passRate.toFixed(1) + '%';
+            document.getElementById('pass-rate-change').textContent = '↑ ' + d.passRateChange.toFixed(1) + '%';
+            document.getElementById('pass-rate-change').className = 'kpi-change positive';
+
+            document.getElementById('total-inspected').textContent = d.totalInspected.toLocaleString();
+            document.getElementById('inspected-change').textContent = '+' + d.inspectedChange + ' today';
+
+            document.getElementById('defect-rate').textContent = d.defectRate.toFixed(1) + '%';
+            document.getElementById('defect-change').textContent = '↓ ' + Math.abs(d.defectChange).toFixed(1) + '%';
+            document.getElementById('defect-change').className = 'kpi-change positive';
+        }
+
+        function renderSigmaByStation() {
+            if (!dashboardData) return;
+
+            const container = document.getElementById('sigma-by-station');
+            container.innerHTML = '';
+
+            dashboardData.stations.forEach(station => {
+                const div = document.createElement('div');
+                div.className = 'station-bar';
+                
+                const sigmaClass = station.sigma >= 4.0 ? 'sigma-excellent' : 
+                                 station.sigma >= 3.0 ? 'sigma-good' : 'sigma-poor';
+                
+                const barColor = station.sigma >= 4.0 ? '#10b981' : 
+                               station.sigma >= 3.0 ? '#f59e0b' : '#ef4444';
+                
+                const barWidth = (station.sigma / 6.0) * 100;
+                
+                div.innerHTML = `
+                    <div class="station-bar-header">
+                        <span class="station-name">${station.name}</span>
+                        <span class="sigma-value ${sigmaClass}">${station.sigma.toFixed(1)}σ</span>
+                    </div>
+                    <div class="bar-fill-container">
+                        <div class="bar-fill" style="width: ${barWidth}%; background: ${barColor};">
+                            ${station.sigma.toFixed(1)}σ
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        function renderStationSummary() {
+            if (!dashboardData) return;
+
+            const container = document.getElementById('station-summary');
+            container.innerHTML = '';
+
+            dashboardData.stations.forEach(station => {
+                const passRate = ((station.passed / station.inspected) * 100).toFixed(1);
+                
+                const div = document.createElement('div');
+                div.style.cssText = 'background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb;';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${station.name}</strong>
+                            <div style="font-size: 13px; color: #666; margin-top: 5px;">
+                                ${station.inspected} inspected | ${station.passed} passed | ${station.failed} failed
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 20px; font-weight: 700; color: ${passRate >= 95 ? '#10b981' : passRate >= 90 ? '#f59e0b' : '#ef4444'};">
+                                ${passRate}%
+                            </div>
+                            <div style="font-size: 12px; color: #666;">Pass Rate</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function loadStationDetails() {
+            const station = document.getElementById('station-selector').value;
+            
+            if (!station) {
+                document.getElementById('station-sigma').textContent = '-';
+                document.getElementById('station-pass-rate').textContent = '-';
+                document.getElementById('station-inspected').textContent = '-';
+                document.getElementById('station-defects').textContent = '-';
+                return;
+            }
+
+            if (!dashboardData) return;
+
+            const stationData = dashboardData.stations.find(s => s.name === station);
+            if (!stationData) return;
+
+            const passRate = ((stationData.passed / stationData.inspected) * 100).toFixed(1);
+
+            document.getElementById('station-sigma').textContent = stationData.sigma.toFixed(1) + 'σ';
+            document.getElementById('station-pass-rate').textContent = passRate + '%';
+            document.getElementById('station-inspected').textContent = stationData.inspected.toLocaleString();
+            document.getElementById('station-defects').textContent = stationData.failed;
+        }
+
         function goToStart() {
-            // Reset form
             document.getElementById('part-no').value = '';
             document.getElementById('schedule-no').value = '';
             document.getElementById('batch-qty').value = '';
@@ -1082,7 +1637,6 @@
             if (!sheetUrl) return;
 
             try {
-                // Query for existing schedule at this station
                 const queryUrl = `${sheetUrl}?action=lookup&scheduleNo=${encodeURIComponent(scheduleNo)}&partNo=${encodeURIComponent(partNo)}&station=${encodeURIComponent(station)}`;
                 const response = await fetch(queryUrl);
                 const data = await response.json();
@@ -1106,22 +1660,18 @@
                         <p style="margin-top: 10px; color: #1e40af; font-weight: 600;">✓ Continue inspection at this station!</p>
                     `;
 
-                    // Auto-fill batch qty if not already filled
                     const batchQtyInput = document.getElementById('batch-qty');
                     if (!batchQtyInput.value && data.batchQty) {
                         batchQtyInput.value = data.batchQty;
                         batchQtyInput.readOnly = true;
                     }
                     
-                    // Pre-fill inspection level
                     if (data.inspectionLevel) {
                         document.getElementById('inspection-level').value = data.inspectionLevel;
                     }
                     
-                    // Update sample size display
                     updateSampleSize();
                 } else {
-                    // Check if schedule exists at all (different station)
                     await checkScheduleExists(scheduleNo, partNo);
                 }
             } catch (error) {
@@ -1131,7 +1681,6 @@
         }
         
         async function checkScheduleExists(scheduleNo, partNo) {
-            // Check Schedule Tracker to get batch qty even if station is different
             const sheetUrl = localStorage.getItem('googleSheetsUrl');
             if (!sheetUrl) return;
             
@@ -1172,7 +1721,6 @@
                 return;
             }
 
-            // Calculate sample size if not already done
             if (!currentSchedule.sampleSize) {
                 const result = calculateSampleSize(batchQty);
                 currentSchedule.sampleSize = result.sampleSize;
@@ -1194,7 +1742,6 @@
                 currentSchedule.selectedChecks.push(checkData);
             });
 
-            // Use sample size as total checks needed, not batch qty
             if (!currentSchedule.totalChecksNeeded) {
                 currentSchedule.totalChecksNeeded = currentSchedule.sampleSize;
             }
@@ -1235,7 +1782,6 @@
             container.innerHTML = '';
             currentInspection.checkResults = [];
             
-            // Set up suggested sample display
             const suggestedSample = currentSchedule.sampleSize || 0;
             const inspectionLevel = currentSchedule.inspectionLevel || '';
             const remaining = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
@@ -1312,16 +1858,13 @@
                 return;
             }
 
-            // Update remaining display
             const newRemaining = maxAllowed - qty;
             document.getElementById('remaining-display').textContent = newRemaining >= 0 ? newRemaining : maxAllowed;
 
             if (qty > 0) {
-                // Update all checks with the same quantity
                 currentInspection.checkResults.forEach((result, index) => {
                     result.checkedQty = qty;
                     
-                    // Show result buttons for each check
                     const resultsDiv = document.getElementById(`results-${index}`);
                     const buttonsDiv = document.getElementById(`result-buttons-${index}`);
                     
@@ -1345,18 +1888,12 @@
                     document.getElementById(`range-to-${index}`).max = qty;
                 });
             } else {
-                // Hide all result sections
                 currentInspection.checkResults.forEach((result, index) => {
                     document.getElementById(`results-${index}`).style.display = 'none';
                 });
             }
             
             updateProgress();
-        }
-
-        function updateCheckLevel(checkIndex) {
-            // This function is no longer needed for per-check level
-            // Level is set globally at the schedule level
         }
 
         function toggleResult(checkIndex, itemIndex, shiftKey) {
@@ -1550,7 +2087,6 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Submitting...';
             
-            // Get the batch check qty (same for all checks)
             const totalCheckedToday = parseInt(document.getElementById('batch-check-qty').value) || 0;
 
             currentInspection.checkResults.forEach((result, checkIndex) => {
@@ -1589,7 +2125,7 @@
                     checkedQty: result.checkedQty,
                     pass: result.results.filter(r => r === 'pass').length,
                     fail: result.results.filter(r => r === 'fail').length,
-                    results: result.results, // Individual sample results: ['pass', 'fail', 'pass', ...]
+                    results: result.results,
                     failedItems: result.failedItems || []
                 }))
             };
@@ -1612,7 +2148,6 @@
                     mode: 'no-cors'
                 });
                 
-                // With no-cors, we can't read response, but if no error thrown, it sent
                 submissionSuccess = true;
                 submitBtn.textContent = '✓ Data Sent!';
                 
@@ -1622,19 +2157,12 @@
                 submissionSuccess = false;
             }
             
-            // Wait a moment so user sees the status
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Always proceed to success screen
             displaySummary(totalCheckedToday, inspectionId, submissionSuccess);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Inspection';
             showScreen('screen-success');
-            
-            // Auto-redirect to home after 3 seconds
-            setTimeout(() => {
-                goToStart();
-            }, 3000);
         }
 
         function displaySummary(totalCheckedToday, inspectionId, submissionSuccess) {
@@ -1655,7 +2183,6 @@
                 ${isComplete ? '<strong style="color: #10b981;">✓ This station is complete!</strong>' : `<strong>${remaining} items remaining at this station.</strong>`}
             `;
             
-            // Show submission status
             const statusDiv = document.getElementById('submission-status');
             if (submissionSuccess) {
                 statusDiv.style.background = '#d1fae5';
@@ -1669,7 +2196,6 @@
                 statusDiv.innerHTML = '⚠️ Unable to confirm submission. Please check Google Sheets.';
             }
             
-            // Pre-fill current schedule for PDF download
             document.getElementById('pdf-schedule-no').value = currentSchedule.scheduleNo;
             document.getElementById('current-schedule-display').textContent = currentSchedule.scheduleNo;
 
@@ -1742,14 +2268,12 @@
             try {
                 statusDiv.innerHTML = '<div class="alert alert-info">⏳ Generating PDF for schedule ' + scheduleNo + '...</div>';
                 
-                // Request PDF generation
                 const queryUrl = `${sheetUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(scheduleNo)}`;
                 const response = await fetch(queryUrl);
                 const data = await response.json();
                 
                 if (data.pdfUrl) {
                     statusDiv.innerHTML = '<div class="alert alert-success">✓ PDF Generated Successfully!<br><br><a href="' + data.pdfUrl + '" target="_blank" class="btn btn-primary" style="margin: 10px 0;">📥 Open PDF</a></div>';
-                    // Also open automatically
                     window.open(data.pdfUrl, '_blank');
                 } else if (data.error) {
                     statusDiv.innerHTML = '<div class="alert alert-warning">Error: ' + data.error + '</div>';
@@ -1777,19 +2301,16 @@
             }
             
             try {
-                // Show loading
                 const btn = event.target;
                 const originalText = btn.textContent;
                 btn.disabled = true;
                 btn.textContent = '⏳ Generating PDF...';
                 
-                // Request PDF generation
                 const queryUrl = `${sheetUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(scheduleNo)}`;
                 const response = await fetch(queryUrl);
                 const data = await response.json();
                 
                 if (data.pdfUrl) {
-                    // Open PDF in new tab
                     window.open(data.pdfUrl, '_blank');
                     btn.textContent = '✓ PDF Downloaded!';
                     setTimeout(() => {
@@ -1815,22 +2336,6 @@
         
         function startNewInspection() {
             goToStart();
-        }
-        
-        function openControlSheet() {
-            const sheetUrl = localStorage.getItem('googleSheetsUrl');
-            if (sheetUrl) {
-                // Extract spreadsheet ID from the web app URL
-                const spreadsheetId = sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-                if (spreadsheetId) {
-                    // Open the Control Sheets tab directly
-                    window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`, '_blank');
-                } else {
-                    alert('Please open your Google Spreadsheet and go to the "Control Sheets" tab.');
-                }
-            } else {
-                alert('Google Sheets URL not configured. Please check settings.');
-            }
         }
 
         // Settings functions
