@@ -1291,23 +1291,281 @@
                 loadStationDetails();
             }
         }
+// REPLACE the loadDashboardData() function in your HTML with this updated version:
 
-        async function loadDashboardData() {
-            const url = localStorage.getItem('googleSheetsUrl');
-            if (!url) return;
+async function loadDashboardData() {
+    const url = localStorage.getItem('googleSheetsUrl');
+    if (!url) return;
 
-            try {
-                // For now, we'll use mock data
-                // In production, fetch from Google Sheets
-                dashboardData = generateMockDashboardData();
-                
-                renderOverallMetrics();
-                renderSigmaByStation();
-                renderStationSummary();
-            } catch (error) {
-                console.error('Dashboard error:', error);
-            }
+    const period = document.getElementById('dashboard-period').value;
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+
+    try {
+        // Show loading state
+        document.getElementById('overall-sigma').textContent = 'Loading...';
+        
+        // Build query URL
+        let queryUrl = `${url}?action=getDashboardData&period=${period}`;
+        if (period === 'custom' && dateFrom && dateTo) {
+            queryUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
         }
+        
+        const response = await fetch(queryUrl);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Dashboard error:', data.error);
+            return;
+        }
+        
+        dashboardData = data;
+        
+        // Render all sections
+        renderOverallMetrics();
+        renderSigmaByStation();
+        renderStationSummary();
+        renderDefectAnalysis();
+        renderTrends();
+        
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        document.getElementById('overall-sigma').textContent = 'Error loading data';
+    }
+}
+
+// ALSO ADD these new rendering functions:
+
+function renderDefectAnalysis() {
+    if (!dashboardData || !dashboardData.defectTypes) return;
+
+    // Pareto Chart
+    const paretoContainer = document.getElementById('pareto-chart');
+    paretoContainer.innerHTML = '';
+    
+    const defects = dashboardData.defectTypes;
+    if (defects.length === 0) {
+        paretoContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No defect data available</p>';
+        return;
+    }
+    
+    const totalDefects = defects.reduce((sum, d) => sum + d.failed, 0);
+    let cumulative = 0;
+    
+    defects.forEach((defect, index) => {
+        cumulative += defect.failed;
+        const percent = (defect.failed / totalDefects * 100).toFixed(1);
+        const cumulativePercent = (cumulative / totalDefects * 100).toFixed(1);
+        
+        const div = document.createElement('div');
+        div.style.cssText = 'margin-bottom: 15px;';
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span style="font-weight: 600;">${index + 1}. ${defect.check}</span>
+                <span style="font-weight: 600; color: #ef4444;">${defect.failed} defects (${percent}%)</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="flex: 1; background: #e5e7eb; height: 25px; border-radius: 8px; overflow: hidden;">
+                    <div style="width: ${percent}%; height: 100%; background: #ef4444;"></div>
+                </div>
+                <span style="font-size: 13px; color: #666; min-width: 80px;">Cumul: ${cumulativePercent}%</span>
+            </div>
+        `;
+        paretoContainer.appendChild(div);
+    });
+
+    // Defects by Station
+    const stationDefectsContainer = document.getElementById('defects-by-station');
+    stationDefectsContainer.innerHTML = '';
+    
+    const stations = dashboardData.stations || [];
+    const stationDefects = stations.map(s => ({ name: s.name, failed: s.failed }))
+        .filter(s => s.failed > 0)
+        .sort((a, b) => b.failed - a.failed);
+    
+    const maxFailed = Math.max(...stationDefects.map(s => s.failed), 1);
+    
+    stationDefects.forEach(station => {
+        const percent = (station.failed / maxFailed * 100).toFixed(1);
+        
+        const div = document.createElement('div');
+        div.style.cssText = 'margin-bottom: 10px;';
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>${station.name}</span>
+                <span style="font-weight: 600; color: #ef4444;">${station.failed} defects</span>
+            </div>
+            <div style="background: #e5e7eb; height: 20px; border-radius: 8px; overflow: hidden;">
+                <div style="width: ${percent}%; height: 100%; background: #ef4444;"></div>
+            </div>
+        `;
+        stationDefectsContainer.appendChild(div);
+    });
+
+    // Recent Failures
+    const failuresContainer = document.getElementById('recent-failures');
+    failuresContainer.innerHTML = '';
+    
+    const failures = dashboardData.recentFailures || [];
+    if (failures.length === 0) {
+        failuresContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No recent failures</p>';
+        return;
+    }
+    
+    failures.forEach(failure => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #ef4444;';
+        div.innerHTML = `
+            <div style="font-weight: 600; color: #991b1b; margin-bottom: 4px;">${failure.station} - ${failure.check}</div>
+            <div style="font-size: 13px; color: #666;">Schedule: ${failure.schedule} | ${new Date(failure.timestamp).toLocaleDateString()}</div>
+            ${failure.description ? `<div style="font-size: 13px; margin-top: 4px;">${failure.description}</div>` : ''}
+        `;
+        failuresContainer.appendChild(div);
+    });
+}
+
+function renderTrends() {
+    if (!dashboardData || !dashboardData.dailyTrend) return;
+
+    // Daily Pass Rate Trend
+    const trendContainer = document.getElementById('daily-trend');
+    trendContainer.innerHTML = '';
+    
+    const trend = dashboardData.dailyTrend || [];
+    if (trend.length === 0) {
+        trendContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No trend data available</p>';
+        return;
+    }
+    
+    const maxInspected = Math.max(...trend.map(d => d.inspected), 1);
+    
+    trend.slice(-30).forEach(day => {
+        const heightPercent = (day.inspected / maxInspected * 100).toFixed(1);
+        const passColor = day.passRate >= 95 ? '#10b981' : day.passRate >= 90 ? '#f59e0b' : '#ef4444';
+        
+        const div = document.createElement('div');
+        div.style.cssText = 'display: inline-block; width: 30px; margin: 0 2px; vertical-align: bottom;';
+        div.innerHTML = `
+            <div style="background: ${passColor}; height: ${heightPercent}px; border-radius: 4px 4px 0 0;" 
+                 title="${day.date}: ${day.inspected} inspected, ${day.passRate.toFixed(1)}% pass rate"></div>
+            <div style="font-size: 10px; text-align: center; margin-top: 4px; color: #666;">${new Date(day.date).getDate()}</div>
+        `;
+        trendContainer.appendChild(div);
+    });
+    
+    // Add legend
+    const legend = document.createElement('div');
+    legend.style.cssText = 'margin-top: 20px; font-size: 13px; color: #666;';
+    legend.innerHTML = `
+        <span style="color: #10b981;">■</span> ≥95% pass rate
+        <span style="margin-left: 15px; color: #f59e0b;">■</span> 90-95% pass rate
+        <span style="margin-left: 15px; color: #ef4444;">■</span> <90% pass rate
+    `;
+    trendContainer.appendChild(legend);
+}
+
+// ADD this function to handle station-specific details
+async function loadStationDetails() {
+    const station = document.getElementById('station-selector').value;
+    const period = document.getElementById('dashboard-period').value;
+    const url = localStorage.getItem('googleSheetsUrl');
+    
+    if (!url) return;
+    
+    if (!station) {
+        document.getElementById('station-sigma').textContent = '-';
+        document.getElementById('station-pass-rate').textContent = '-';
+        document.getElementById('station-inspected').textContent = '-';
+        document.getElementById('station-defects').textContent = '-';
+        document.getElementById('station-checks').innerHTML = '';
+        document.getElementById('inspector-performance').innerHTML = '';
+        return;
+    }
+
+    try {
+        const queryUrl = `${url}?action=getStationDetails&station=${encodeURIComponent(station)}&period=${period}`;
+        const response = await fetch(queryUrl);
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Station details error:', data.error);
+            return;
+        }
+        
+        // Update KPIs
+        document.getElementById('station-sigma').textContent = data.sigma.toFixed(1) + 'σ';
+        document.getElementById('station-pass-rate').textContent = data.passRate.toFixed(1) + '%';
+        document.getElementById('station-inspected').textContent = data.inspected.toLocaleString();
+        document.getElementById('station-defects').textContent = data.failed;
+        
+        // Render checks
+        const checksContainer = document.getElementById('station-checks');
+        checksContainer.innerHTML = '';
+        
+        const checks = data.checks || [];
+        checks.sort((a, b) => b.total - a.total).slice(0, 5).forEach(check => {
+            const passRate = check.total > 0 ? (check.passed / check.total * 100).toFixed(1) : 0;
+            
+            const div = document.createElement('div');
+            div.style.cssText = 'margin-bottom: 12px;';
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="font-weight: 600;">${check.check}</span>
+                    <span>${check.total} inspections</span>
+                </div>
+                <div style="background: #e5e7eb; height: 20px; border-radius: 8px; overflow: hidden;">
+                    <div style="width: ${passRate}%; height: 100%; background: #10b981; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
+                        ${passRate}%
+                    </div>
+                </div>
+            `;
+            checksContainer.appendChild(div);
+        });
+        
+        // Render inspectors
+        const inspectorsContainer = document.getElementById('inspector-performance');
+        inspectorsContainer.innerHTML = '';
+        
+        const inspectors = data.inspectors || [];
+        inspectors.sort((a, b) => b.total - a.total).forEach(inspector => {
+            const passRate = inspector.total > 0 ? (inspector.passed / inspector.total * 100).toFixed(1) : 0;
+            
+            const div = document.createElement('div');
+            div.style.cssText = 'background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 8px;';
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-weight: 600;">${inspector.name}</span>
+                    <span style="font-size: 18px; font-weight: 700; color: ${passRate >= 95 ? '#10b981' : '#f59e0b'};">${passRate}%</span>
+                </div>
+                <div style="font-size: 13px; color: #666;">
+                    ${inspector.total} inspections | ${inspector.passed} passed | ${inspector.failed} failed
+                </div>
+            `;
+            inspectorsContainer.appendChild(div);
+        });
+        
+    } catch (error) {
+        console.error('Station details error:', error);
+    }
+}
+
+// UPDATE the date period selector to show/hide custom date inputs
+document.getElementById('dashboard-period').addEventListener('change', function() {
+    const period = this.value;
+    const dateFromInput = document.getElementById('date-from');
+    const dateToInput = document.getElementById('date-to');
+    
+    if (period === 'custom') {
+        dateFromInput.style.display = 'block';
+        dateToInput.style.display = 'block';
+    } else {
+        dateFromInput.style.display = 'none';
+        dateToInput.style.display = 'none';
+        loadDashboardData();
+    }
+});
+
+    
 
         function generateMockDashboardData() {
             // This would normally come from Google Sheets
