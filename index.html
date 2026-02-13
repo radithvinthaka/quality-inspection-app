@@ -7,8 +7,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="QC Inspect">
     <meta name="theme-color" content="#667eea">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23667eea' width='100' height='100'/%3E%3Ctext y='70' x='50' text-anchor='middle' font-size='60' fill='white'%3E✓%3C/text%3E%3C/svg%3E">
     <title>Quality Inspection App</title>
     <style>
         * {
@@ -115,11 +113,6 @@
             color: white;
         }
 
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
         .form-group {
             margin-bottom: 20px;
         }
@@ -135,6 +128,7 @@
         input[type="text"],
         input[type="number"],
         input[type="password"],
+        input[type="date"],
         select,
         textarea {
             width: 100%;
@@ -382,11 +376,6 @@
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
         }
 
-        .history-item.complete {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-
         .history-header {
             display: flex;
             justify-content: space-between;
@@ -405,11 +394,6 @@
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
-        }
-
-        .status-complete {
-            background: #d1fae5;
-            color: #065f46;
         }
 
         .status-in-progress {
@@ -592,6 +576,60 @@
             background: #5568d3;
         }
 
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-filter select,
+        .date-filter input[type="date"] {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
         @media print {
             body {
                 background: white;
@@ -606,30 +644,36 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .btn, .dashboard-tabs, .settings-icon {
+            .loading-overlay,
+            .btn,
+            .dashboard-tabs,
+            .settings-icon,
+            .date-filter {
                 display: none !important;
             }
             .chart-container {
                 page-break-inside: avoid;
+                border: 1px solid #e5e7eb !important;
             }
-        }
-
-        .date-filter {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        .date-filter select,
-        .date-filter input[type="date"] {
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            .bar-fill-container,
+            .station-bar,
+            .bar-fill {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .bar-fill {
+                background-color: #667eea !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading dashboard data...</div>
+    </div>
+
     <div class="container">
         <div class="header">
             <div class="settings-icon" onclick="showSettingsModal()">⚙️</div>
@@ -657,14 +701,14 @@
                     
                     <div class="date-filter">
                         <label style="margin: 0;">Period:</label>
-                        <select id="dashboard-period" onchange="loadDashboardData()">
+                        <select id="dashboard-period" onchange="handlePeriodChange()">
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month" selected>This Month</option>
                             <option value="custom">Custom Range</option>
                         </select>
-                        <input type="date" id="date-from" style="display: none;">
-                        <input type="date" id="date-to" style="display: none;">
+                        <input type="date" id="date-from" style="display: none;" onchange="loadDashboardData()">
+                        <input type="date" id="date-to" style="display: none;" onchange="loadDashboardData()">
                         <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
                     </div>
 
@@ -673,6 +717,7 @@
                         <button class="dashboard-tab" onclick="showDashboardTab('stations')">By Station</button>
                         <button class="dashboard-tab" onclick="showDashboardTab('defects')">Defect Analysis</button>
                         <button class="dashboard-tab" onclick="showDashboardTab('trends')">Trends</button>
+                        <button class="dashboard-tab" onclick="showDashboardTab('monthly')">Monthly Comparison</button>
                     </div>
 
                     <!-- OVERALL TAB -->
@@ -792,6 +837,24 @@
                         <div class="chart-container">
                             <div class="chart-title">Inspection Volume vs Quality</div>
                             <div id="volume-quality"></div>
+                        </div>
+                    </div>
+
+                    <!-- MONTHLY COMPARISON TAB -->
+                    <div class="dashboard-section" id="dashboard-monthly">
+                        <div class="chart-container">
+                            <div class="chart-title">Monthly Performance Comparison (Last 6 Months)</div>
+                            <div id="monthly-comparison-chart"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Month-by-Month Station Performance</div>
+                            <div id="monthly-station-breakdown"></div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-title">Quality Trends by Month</div>
+                            <div id="monthly-quality-trends"></div>
                         </div>
                     </div>
 
@@ -1051,7 +1114,7 @@
     <script>
         const ADMIN_PASSWORD = 'admin123'; // CHANGE THIS!
 
-        // ISO 2859-1 Sample Size Code Letters (General Inspection Level II)
+        // ISO 2859-1 Sample Size Code Letters
         const iso2859SampleSizes = {
             levelI: [
                 { min: 2, max: 8, letter: 'A', sampleSize: 2 },
@@ -1108,13 +1171,9 @@
 
         function calculateSampleSize(batchSize, level = 'II') {
             let ranges;
-            if (level === 'I') {
-                ranges = iso2859SampleSizes.levelI;
-            } else if (level === 'III') {
-                ranges = iso2859SampleSizes.levelIII;
-            } else {
-                ranges = iso2859SampleSizes.levelII;
-            }
+            if (level === 'I') ranges = iso2859SampleSizes.levelI;
+            else if (level === 'III') ranges = iso2859SampleSizes.levelIII;
+            else ranges = iso2859SampleSizes.levelII;
             
             for (let range of ranges) {
                 if (batchSize >= range.min && batchSize <= range.max) {
@@ -1127,29 +1186,6 @@
                 }
             }
             return { sampleSize: 0, letter: 'N/A', batchSize: batchSize, level: level };
-        }
-
-        // Calculate Sigma Level
-        function calculateSigma(defects, opportunities) {
-            if (opportunities === 0) return 0;
-            
-            const dpu = defects / opportunities; // Defects Per Unit
-            const dpmo = dpu * 1000000; // Defects Per Million Opportunities
-            
-            // Approximate sigma using inverse normal distribution
-            // For simplicity, using lookup table
-            if (dpmo >= 691462) return 0;
-            if (dpmo >= 308538) return 1.0;
-            if (dpmo >= 158655) return 1.5;
-            if (dpmo >= 66807) return 2.0;
-            if (dpmo >= 22750) return 2.5;
-            if (dpmo >= 6210) return 3.0;
-            if (dpmo >= 1350) return 3.5;
-            if (dpmo >= 233) return 4.0;
-            if (dpmo >= 32) return 4.5;
-            if (dpmo >= 3.4) return 5.0;
-            if (dpmo >= 0.34) return 5.5;
-            return 6.0;
         }
 
         const stationChecks = {
@@ -1203,10 +1239,7 @@
             totalChecksNeeded: 0
         };
 
-        let currentInspection = {
-            checkResults: []
-        };
-
+        let currentInspection = { checkResults: [] };
         let lastClickedButton = {};
         let dashboardData = null;
 
@@ -1221,13 +1254,10 @@
             
             if (batchQty > 0 && level) {
                 const result = calculateSampleSize(batchQty, level);
-                
                 document.getElementById('display-batch-size').textContent = batchQty.toLocaleString();
                 document.getElementById('display-sample-size').textContent = result.sampleSize.toLocaleString();
                 document.getElementById('display-code-letter').textContent = result.letter;
-                
                 displayDiv.style.display = 'block';
-                
                 currentSchedule.sampleSize = result.sampleSize;
                 currentSchedule.sampleCodeLetter = result.letter;
                 currentSchedule.inspectionLevel = level;
@@ -1241,11 +1271,7 @@
         function checkConfiguration() {
             const url = localStorage.getItem('googleSheetsUrl');
             const warning = document.getElementById('not-configured-warning');
-            if (!url) {
-                warning.style.display = 'block';
-            } else {
-                warning.style.display = 'none';
-            }
+            warning.style.display = url ? 'none' : 'block';
         }
 
         function showScreen(screenId) {
@@ -1262,7 +1288,6 @@
             showScreen('screen-initial-data');
         }
 
-        // DASHBOARD FUNCTIONS
         function showDashboard() {
             const url = localStorage.getItem('googleSheetsUrl');
             if (!url) {
@@ -1274,21 +1299,27 @@
         }
 
         function showDashboardTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.dashboard-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            document.querySelectorAll('.dashboard-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
-
-            // Update sections
-            document.querySelectorAll('.dashboard-section').forEach(section => {
-                section.classList.remove('active');
-            });
+            document.querySelectorAll('.dashboard-section').forEach(section => section.classList.remove('active'));
             document.getElementById('dashboard-' + tabName).classList.add('active');
+            
+            if (tabName === 'stations') loadStationDetails();
+            else if (tabName === 'monthly') renderMonthlyComparison();
+        }
 
-            // Load specific data
-            if (tabName === 'stations') {
-                loadStationDetails();
+        function handlePeriodChange() {
+            const period = document.getElementById('dashboard-period').value;
+            const dateFromInput = document.getElementById('date-from');
+            const dateToInput = document.getElementById('date-to');
+            
+            if (period === 'custom') {
+                dateFromInput.style.display = 'block';
+                dateToInput.style.display = 'block';
+            } else {
+                dateFromInput.style.display = 'none';
+                dateToInput.style.display = 'none';
+                loadDashboardData();
             }
         }
 
@@ -1296,81 +1327,77 @@
             const url = localStorage.getItem('googleSheetsUrl');
             if (!url) return;
 
+            const period = document.getElementById('dashboard-period').value;
+            const dateFrom = document.getElementById('date-from').value;
+            const dateTo = document.getElementById('date-to').value;
+
             try {
-                // For now, we'll use mock data
-                // In production, fetch from Google Sheets
-                dashboardData = generateMockDashboardData();
+                document.getElementById('loading-overlay').classList.add('active');
                 
+                let queryUrl = `${url}?action=getDashboardData&period=${period}`;
+                if (period === 'custom' && dateFrom && dateTo) {
+                    queryUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
+                }
+                
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Dashboard error:', data.error);
+                    document.getElementById('loading-overlay').classList.remove('active');
+                    return;
+                }
+                
+                dashboardData = data;
                 renderOverallMetrics();
                 renderSigmaByStation();
                 renderStationSummary();
+                renderDefectAnalysis();
+                renderTrends();
+                
+                document.getElementById('loading-overlay').classList.remove('active');
+                
             } catch (error) {
                 console.error('Dashboard error:', error);
+                document.getElementById('loading-overlay').classList.remove('active');
+                document.getElementById('overall-sigma').textContent = 'Error loading data';
             }
-        }
-
-        function generateMockDashboardData() {
-            // This would normally come from Google Sheets
-            return {
-                overall: {
-                    sigma: 4.2,
-                    sigmaChange: 0.3,
-                    passRate: 97.8,
-                    passRateChange: 1.2,
-                    totalInspected: 1543,
-                    inspectedChange: 15,
-                    defectRate: 2.2,
-                    defectChange: -0.5
-                },
-                stations: [
-                    { name: 'INNER CUTTING', sigma: 4.5, inspected: 250, passed: 246, failed: 4 },
-                    { name: 'OUTER CUTTING', sigma: 3.8, inspected: 200, passed: 192, failed: 8 },
-                    { name: 'SLEEVE CUTTING', sigma: 4.1, inspected: 180, passed: 176, failed: 4 },
-                    { name: 'GLUING', sigma: 3.2, inspected: 220, passed: 210, failed: 10 },
-                    { name: 'SWAGING', sigma: 4.3, inspected: 193, passed: 189, failed: 4 },
-                    { name: 'ASSEMBLY', sigma: 4.6, inspected: 300, passed: 297, failed: 3 },
-                    { name: 'DIE CASTING', sigma: 3.9, inspected: 200, passed: 194, failed: 6 }
-                ]
-            };
         }
 
         function renderOverallMetrics() {
             if (!dashboardData) return;
-
             const d = dashboardData.overall;
             
             document.getElementById('overall-sigma').textContent = d.sigma.toFixed(1) + 'σ';
-            document.getElementById('sigma-change').textContent = '↑ ' + d.sigmaChange.toFixed(1) + 'σ vs last month';
-            document.getElementById('sigma-change').className = 'kpi-change positive';
+            const sigmaChangeText = d.sigmaChange >= 0 ? '↑ ' + d.sigmaChange.toFixed(1) + 'σ' : '↓ ' + Math.abs(d.sigmaChange).toFixed(1) + 'σ';
+            document.getElementById('sigma-change').textContent = sigmaChangeText + ' vs last period';
+            document.getElementById('sigma-change').className = d.sigmaChange >= 0 ? 'kpi-change positive' : 'kpi-change negative';
 
             document.getElementById('overall-pass-rate').textContent = d.passRate.toFixed(1) + '%';
-            document.getElementById('pass-rate-change').textContent = '↑ ' + d.passRateChange.toFixed(1) + '%';
-            document.getElementById('pass-rate-change').className = 'kpi-change positive';
+            const passRateChangeText = d.passRateChange >= 0 ? '↑ ' + d.passRateChange.toFixed(1) + '%' : '↓ ' + Math.abs(d.passRateChange).toFixed(1) + '%';
+            document.getElementById('pass-rate-change').textContent = passRateChangeText;
+            document.getElementById('pass-rate-change').className = d.passRateChange >= 0 ? 'kpi-change positive' : 'kpi-change negative';
 
             document.getElementById('total-inspected').textContent = d.totalInspected.toLocaleString();
-            document.getElementById('inspected-change').textContent = '+' + d.inspectedChange + ' today';
+            const inspectedChangeText = d.inspectedChange >= 0 ? '+' + d.inspectedChange : d.inspectedChange;
+            document.getElementById('inspected-change').textContent = inspectedChangeText;
 
             document.getElementById('defect-rate').textContent = d.defectRate.toFixed(1) + '%';
-            document.getElementById('defect-change').textContent = '↓ ' + Math.abs(d.defectChange).toFixed(1) + '%';
-            document.getElementById('defect-change').className = 'kpi-change positive';
+            const defectChangeText = d.defectChange >= 0 ? '↑ ' + d.defectChange.toFixed(1) + '%' : '↓ ' + Math.abs(d.defectChange).toFixed(1) + '%';
+            document.getElementById('defect-change').textContent = defectChangeText;
+            document.getElementById('defect-change').className = d.defectChange <= 0 ? 'kpi-change positive' : 'kpi-change negative';
         }
 
         function renderSigmaByStation() {
             if (!dashboardData) return;
-
             const container = document.getElementById('sigma-by-station');
             container.innerHTML = '';
 
             dashboardData.stations.forEach(station => {
                 const div = document.createElement('div');
                 div.className = 'station-bar';
-                
-                const sigmaClass = station.sigma >= 4.0 ? 'sigma-excellent' : 
-                                 station.sigma >= 3.0 ? 'sigma-good' : 'sigma-poor';
-                
-                const barColor = station.sigma >= 4.0 ? '#10b981' : 
-                               station.sigma >= 3.0 ? '#f59e0b' : '#ef4444';
-                
+                const sigmaClass = station.sigma >= 4.0 ? 'sigma-excellent' : station.sigma >= 3.0 ? 'sigma-good' : 'sigma-poor';
+                const barColor = station.sigma >= 4.0 ? '#10b981' : station.sigma >= 3.0 ? '#f59e0b' : '#ef4444';
                 const barWidth = (station.sigma / 6.0) * 100;
                 
                 div.innerHTML = `
@@ -1379,25 +1406,20 @@
                         <span class="sigma-value ${sigmaClass}">${station.sigma.toFixed(1)}σ</span>
                     </div>
                     <div class="bar-fill-container">
-                        <div class="bar-fill" style="width: ${barWidth}%; background: ${barColor};">
-                            ${station.sigma.toFixed(1)}σ
-                        </div>
+                        <div class="bar-fill" style="width: ${barWidth}%; background: ${barColor};">${station.sigma.toFixed(1)}σ</div>
                     </div>
                 `;
-                
                 container.appendChild(div);
             });
         }
 
         function renderStationSummary() {
             if (!dashboardData) return;
-
             const container = document.getElementById('station-summary');
             container.innerHTML = '';
 
             dashboardData.stations.forEach(station => {
                 const passRate = ((station.passed / station.inspected) * 100).toFixed(1);
-                
                 const div = document.createElement('div');
                 div.style.cssText = 'background: #f9fafb; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb;';
                 div.innerHTML = `
@@ -1420,28 +1442,319 @@
             });
         }
 
-        function loadStationDetails() {
+        function renderDefectAnalysis() {
+            if (!dashboardData || !dashboardData.defectTypes) return;
+            const paretoContainer = document.getElementById('pareto-chart');
+            paretoContainer.innerHTML = '';
+            
+            const defects = dashboardData.defectTypes;
+            if (defects.length === 0) {
+                paretoContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No defect data available</p>';
+                return;
+            }
+            
+            const totalDefects = defects.reduce((sum, d) => sum + d.failed, 0);
+            let cumulative = 0;
+            
+            defects.forEach((defect, index) => {
+                cumulative += defect.failed;
+                const percent = (defect.failed / totalDefects * 100).toFixed(1);
+                const cumulativePercent = (cumulative / totalDefects * 100).toFixed(1);
+                
+                const div = document.createElement('div');
+                div.style.cssText = 'margin-bottom: 15px;';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-weight: 600;">${index + 1}. ${defect.check}</span>
+                        <span style="font-weight: 600; color: #ef4444;">${defect.failed} defects (${percent}%)</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1; background: #e5e7eb; height: 25px; border-radius: 8px; overflow: hidden;">
+                            <div style="width: ${percent}%; height: 100%; background: #ef4444;"></div>
+                        </div>
+                        <span style="font-size: 13px; color: #666; min-width: 80px;">Cumul: ${cumulativePercent}%</span>
+                    </div>
+                `;
+                paretoContainer.appendChild(div);
+            });
+
+            const stationDefectsContainer = document.getElementById('defects-by-station');
+            stationDefectsContainer.innerHTML = '';
+            
+            const stations = dashboardData.stations || [];
+            const stationDefects = stations.map(s => ({ name: s.name, failed: s.failed }))
+                .filter(s => s.failed > 0)
+                .sort((a, b) => b.failed - a.failed);
+            
+            const maxFailed = Math.max(...stationDefects.map(s => s.failed), 1);
+            
+            stationDefects.forEach(station => {
+                const percent = (station.failed / maxFailed * 100).toFixed(1);
+                const div = document.createElement('div');
+                div.style.cssText = 'margin-bottom: 10px;';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>${station.name}</span>
+                        <span style="font-weight: 600; color: #ef4444;">${station.failed} defects</span>
+                    </div>
+                    <div style="background: #e5e7eb; height: 20px; border-radius: 8px; overflow: hidden;">
+                        <div style="width: ${percent}%; height: 100%; background: #ef4444;"></div>
+                    </div>
+                `;
+                stationDefectsContainer.appendChild(div);
+            });
+
+            const failuresContainer = document.getElementById('recent-failures');
+            failuresContainer.innerHTML = '';
+            
+            const failures = dashboardData.recentFailures || [];
+            if (failures.length === 0) {
+                failuresContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No recent failures</p>';
+                return;
+            }
+            
+            failures.forEach(failure => {
+                const div = document.createElement('div');
+                div.style.cssText = 'background: #fee2e2; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #ef4444;';
+                div.innerHTML = `
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 4px;">${failure.station} - ${failure.check}</div>
+                    <div style="font-size: 13px; color: #666;">Schedule: ${failure.schedule} | ${new Date(failure.timestamp).toLocaleDateString()}</div>
+                    ${failure.description ? `<div style="font-size: 13px; margin-top: 4px;">${failure.description}</div>` : ''}
+                `;
+                failuresContainer.appendChild(div);
+            });
+        }
+
+        function renderTrends() {
+            if (!dashboardData || !dashboardData.dailyTrend) return;
+            const trendContainer = document.getElementById('daily-trend');
+            trendContainer.innerHTML = '';
+            
+            const trend = dashboardData.dailyTrend || [];
+            if (trend.length === 0) {
+                trendContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">No trend data available</p>';
+                return;
+            }
+            
+            const maxInspected = Math.max(...trend.map(d => d.inspected), 1);
+            
+            trend.slice(-30).forEach(day => {
+                const heightPercent = (day.inspected / maxInspected * 100).toFixed(1);
+                const passColor = day.passRate >= 95 ? '#10b981' : day.passRate >= 90 ? '#f59e0b' : '#ef4444';
+                
+                const div = document.createElement('div');
+                div.style.cssText = 'display: inline-block; width: 30px; margin: 0 2px; vertical-align: bottom;';
+                div.innerHTML = `
+                    <div style="background: ${passColor}; height: ${heightPercent}px; border-radius: 4px 4px 0 0;" 
+                         title="${day.date}: ${day.inspected} inspected, ${day.passRate.toFixed(1)}% pass rate"></div>
+                    <div style="font-size: 10px; text-align: center; margin-top: 4px; color: #666;">${new Date(day.date).getDate()}</div>
+                `;
+                trendContainer.appendChild(div);
+            });
+            
+            const legend = document.createElement('div');
+            legend.style.cssText = 'margin-top: 20px; font-size: 13px; color: #666;';
+            legend.innerHTML = `
+                <span style="color: #10b981;">■</span> ≥95% pass rate
+                <span style="margin-left: 15px; color: #f59e0b;">■</span> 90-95% pass rate
+                <span style="margin-left: 15px; color: #ef4444;">■</span> <90% pass rate
+            `;
+            trendContainer.appendChild(legend);
+        }
+
+        async function renderMonthlyComparison() {
+            const url = localStorage.getItem('googleSheetsUrl');
+            if (!url) return;
+            
+            try {
+                document.getElementById('loading-overlay').classList.add('active');
+                
+                const response = await fetch(`${url}?action=getMonthlyComparison`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Monthly comparison error:', data.error);
+                    document.getElementById('loading-overlay').classList.remove('active');
+                    return;
+                }
+                
+                const months = data.months || [];
+                const chartContainer = document.getElementById('monthly-comparison-chart');
+                chartContainer.innerHTML = '';
+                
+                if (months.length === 0) {
+                    chartContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No monthly data available</p>';
+                    document.getElementById('loading-overlay').classList.remove('active');
+                    return;
+                }
+                
+                months.forEach(month => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'margin-bottom: 20px;';
+                    const sigmaColor = month.sigma >= 4.0 ? '#10b981' : month.sigma >= 3.0 ? '#f59e0b' : '#ef4444';
+                    
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <strong style="font-size: 16px;">${month.month}</strong>
+                            <div>
+                                <span style="margin-right: 20px;">Sigma: <strong style="color: ${sigmaColor};">${month.sigma.toFixed(1)}σ</strong></span>
+                                <span style="margin-right: 20px;">Pass Rate: <strong>${month.passRate.toFixed(1)}%</strong></span>
+                                <span>Inspected: <strong>${month.inspected}</strong></span>
+                            </div>
+                        </div>
+                        <div style="background: #e5e7eb; height: 30px; border-radius: 8px; overflow: hidden;">
+                            <div style="width: ${month.passRate}%; height: 100%; background: ${sigmaColor}; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: white; font-weight: 600;">
+                                ${month.passRate.toFixed(1)}%
+                            </div>
+                        </div>
+                    `;
+                    chartContainer.appendChild(div);
+                });
+                
+                const stationContainer = document.getElementById('monthly-station-breakdown');
+                stationContainer.innerHTML = '';
+                
+                const allStations = new Set();
+                months.forEach(month => {
+                    month.stations.forEach(s => allStations.add(s.station));
+                });
+                
+                allStations.forEach(stationName => {
+                    const div = document.createElement('div');
+                    div.style.cssText = 'margin-bottom: 25px;';
+                    let html = `<h4 style="margin-bottom: 10px;">${stationName}</h4>`;
+                    
+                    months.forEach(month => {
+                        const stationData = month.stations.find(s => s.station === stationName);
+                        if (stationData && stationData.total > 0) {
+                            const color = stationData.passRate >= 95 ? '#10b981' : stationData.passRate >= 90 ? '#f59e0b' : '#ef4444';
+                            html += `
+                                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                    <span style="min-width: 80px; font-size: 13px;">${month.month}:</span>
+                                    <div style="flex: 1; background: #e5e7eb; height: 20px; border-radius: 6px; overflow: hidden; margin: 0 10px;">
+                                        <div style="width: ${stationData.passRate}%; height: 100%; background: ${color};"></div>
+                                    </div>
+                                    <span style="min-width: 60px; font-size: 13px; font-weight: 600;">${stationData.passRate.toFixed(1)}%</span>
+                                    <span style="min-width: 80px; font-size: 12px; color: #666;">(${stationData.total} items)</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    div.innerHTML = html;
+                    stationContainer.appendChild(div);
+                });
+                
+                const trendsContainer = document.getElementById('monthly-quality-trends');
+                trendsContainer.innerHTML = '';
+                const maxInspected = Math.max(...months.map(m => m.inspected), 1);
+                
+                months.forEach(month => {
+                    const heightPercent = (month.inspected / maxInspected * 100);
+                    const barColor = month.passRate >= 95 ? '#10b981' : month.passRate >= 90 ? '#f59e0b' : '#ef4444';
+                    
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display: inline-block; width: 120px; margin: 0 5px; vertical-align: bottom; text-align: center;';
+                    div.innerHTML = `
+                        <div style="background: ${barColor}; height: ${heightPercent * 2}px; border-radius: 6px 6px 0 0; margin-bottom: 5px;" 
+                             title="${month.month}: ${month.inspected} inspected, ${month.passRate.toFixed(1)}% pass rate"></div>
+                        <div style="font-size: 11px; font-weight: 600; margin-bottom: 3px;">${month.month}</div>
+                        <div style="font-size: 10px; color: #666;">${month.inspected} items</div>
+                        <div style="font-size: 10px; color: ${barColor}; font-weight: 600;">${month.passRate.toFixed(1)}%</div>
+                    `;
+                    trendsContainer.appendChild(div);
+                });
+                
+                document.getElementById('loading-overlay').classList.remove('active');
+                
+            } catch (error) {
+                console.error('Monthly comparison error:', error);
+                document.getElementById('loading-overlay').classList.remove('active');
+            }
+        }
+
+        async function loadStationDetails() {
             const station = document.getElementById('station-selector').value;
+            const period = document.getElementById('dashboard-period').value;
+            const url = localStorage.getItem('googleSheetsUrl');
+            
+            if (!url) return;
             
             if (!station) {
                 document.getElementById('station-sigma').textContent = '-';
                 document.getElementById('station-pass-rate').textContent = '-';
                 document.getElementById('station-inspected').textContent = '-';
                 document.getElementById('station-defects').textContent = '-';
+                document.getElementById('station-checks').innerHTML = '';
+                document.getElementById('inspector-performance').innerHTML = '';
                 return;
             }
 
-            if (!dashboardData) return;
-
-            const stationData = dashboardData.stations.find(s => s.name === station);
-            if (!stationData) return;
-
-            const passRate = ((stationData.passed / stationData.inspected) * 100).toFixed(1);
-
-            document.getElementById('station-sigma').textContent = stationData.sigma.toFixed(1) + 'σ';
-            document.getElementById('station-pass-rate').textContent = passRate + '%';
-            document.getElementById('station-inspected').textContent = stationData.inspected.toLocaleString();
-            document.getElementById('station-defects').textContent = stationData.failed;
+            try {
+                document.getElementById('loading-overlay').classList.add('active');
+                
+                const queryUrl = `${url}?action=getStationDetails&station=${encodeURIComponent(station)}&period=${period}`;
+                const response = await fetch(queryUrl);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Station details error:', data.error);
+                    document.getElementById('loading-overlay').classList.remove('active');
+                    return;
+                }
+                
+                document.getElementById('station-sigma').textContent = data.sigma.toFixed(1) + 'σ';
+                document.getElementById('station-pass-rate').textContent = data.passRate.toFixed(1) + '%';
+                document.getElementById('station-inspected').textContent = data.inspected.toLocaleString();
+                document.getElementById('station-defects').textContent = data.failed;
+                
+                const checksContainer = document.getElementById('station-checks');
+                checksContainer.innerHTML = '';
+                
+                const checks = data.checks || [];
+                checks.sort((a, b) => b.total - a.total).slice(0, 5).forEach(check => {
+                    const passRate = check.total > 0 ? (check.passed / check.total * 100).toFixed(1) : 0;
+                    const div = document.createElement('div');
+                    div.style.cssText = 'margin-bottom: 12px;';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="font-weight: 600;">${check.check}</span>
+                            <span>${check.total} inspections</span>
+                        </div>
+                        <div style="background: #e5e7eb; height: 20px; border-radius: 8px; overflow: hidden;">
+                            <div style="width: ${passRate}%; height: 100%; background: #10b981; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 600;">
+                                ${passRate}%
+                            </div>
+                        </div>
+                    `;
+                    checksContainer.appendChild(div);
+                });
+                
+                const inspectorsContainer = document.getElementById('inspector-performance');
+                inspectorsContainer.innerHTML = '';
+                
+                const inspectors = data.inspectors || [];
+                inspectors.sort((a, b) => b.total - a.total).forEach(inspector => {
+                    const passRate = inspector.total > 0 ? (inspector.passed / inspector.total * 100).toFixed(1) : 0;
+                    const div = document.createElement('div');
+                    div.style.cssText = 'background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 8px;';
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">${inspector.name}</span>
+                            <span style="font-size: 18px; font-weight: 700; color: ${passRate >= 95 ? '#10b981' : '#f59e0b'};">${passRate}%</span>
+                        </div>
+                        <div style="font-size: 13px; color: #666;">
+                            ${inspector.total} inspections | ${inspector.passed} passed | ${inspector.failed} failed
+                        </div>
+                    `;
+                    inspectorsContainer.appendChild(div);
+                });
+                
+                document.getElementById('loading-overlay').classList.remove('active');
+                
+            } catch (error) {
+                console.error('Station details error:', error);
+                document.getElementById('loading-overlay').classList.remove('active');
+            }
         }
 
         function goToStart() {
@@ -1456,24 +1769,14 @@
             document.getElementById('existing-schedule-alert').style.display = 'none';
             
             currentSchedule = {
-                scheduleNo: '',
-                partNo: '',
-                batchQty: 0,
-                station: '',
-                substation: '',
-                operatorName: '',
-                inspectorName: '',
-                selectedChecks: [],
-                existingData: null,
-                checksCompleted: 0,
-                totalChecksNeeded: 0
+                scheduleNo: '', partNo: '', batchQty: 0, sampleSize: 0,
+                sampleCodeLetter: '', inspectionLevel: '', station: '',
+                substation: '', operatorName: '', inspectorName: '',
+                selectedChecks: [], existingData: null,
+                checksCompleted: 0, totalChecksNeeded: 0
             };
             
             showScreen('screen-start');
-        }
-
-        function goBack() {
-            showScreen('screen-initial-data');
         }
 
         function goBackToEdit() {
@@ -1553,9 +1856,7 @@
                 itemDiv.innerHTML = `
                     <div class="history-header">
                         <div class="history-title">Schedule: ${schedule.scheduleNo}</div>
-                        <span class="history-status status-in-progress">
-                            ${completedCount}/${totalStations} Stations
-                        </span>
+                        <span class="history-status status-in-progress">${completedCount}/${totalStations} Stations</span>
                     </div>
                     <div class="history-details">
                         <div><strong>Part No:</strong> ${schedule.partNo}</div>
@@ -1864,7 +2165,6 @@
             if (qty > 0) {
                 currentInspection.checkResults.forEach((result, index) => {
                     result.checkedQty = qty;
-                    
                     const resultsDiv = document.getElementById(`results-${index}`);
                     const buttonsDiv = document.getElementById(`result-buttons-${index}`);
                     
@@ -2131,8 +2431,6 @@
             };
 
             const sheetUrl = localStorage.getItem('googleSheetsUrl');
-            
-            let inspectionId = 'INS-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
             let submissionSuccess = false;
             
             try {
@@ -2140,9 +2438,7 @@
                 
                 const response = await fetch(sheetUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(sheetData),
                     redirect: 'follow',
                     mode: 'no-cors'
@@ -2159,13 +2455,13 @@
             
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            displaySummary(totalCheckedToday, inspectionId, submissionSuccess);
+            displaySummary(totalCheckedToday, submissionSuccess);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Submit Inspection';
             showScreen('screen-success');
         }
 
-        function displaySummary(totalCheckedToday, inspectionId, submissionSuccess) {
+        function displaySummary(totalCheckedToday, submissionSuccess) {
             let totalPass = 0;
             let totalFail = 0;
 
@@ -2201,47 +2497,17 @@
 
             document.getElementById('inspection-summary').innerHTML = `
                 <h3 style="margin-bottom: 15px;">Inspection Summary</h3>
-                <div class="summary-item">
-                    <strong>Schedule No:</strong>
-                    <span>${currentSchedule.scheduleNo}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Part No:</strong>
-                    <span>${currentSchedule.partNo}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Station:</strong>
-                    <span>${currentSchedule.station}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Batch Qty:</strong>
-                    <span>${currentSchedule.batchQty.toLocaleString()}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Sample Size (this station):</strong>
-                    <span style="color: #667eea; font-weight: 600;">${currentSchedule.sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Inspected Today:</strong>
-                    <span style="color: #667eea; font-weight: 600;">${totalCheckedToday}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Total at Station:</strong>
-                    <span style="color: #10b981; font-weight: 600;">${newTotal}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Remaining:</strong>
-                    <span style="color: #f59e0b; font-weight: 600;">${remaining}</span>
-                </div>
+                <div class="summary-item"><strong>Schedule No:</strong><span>${currentSchedule.scheduleNo}</span></div>
+                <div class="summary-item"><strong>Part No:</strong><span>${currentSchedule.partNo}</span></div>
+                <div class="summary-item"><strong>Station:</strong><span>${currentSchedule.station}</span></div>
+                <div class="summary-item"><strong>Batch Qty:</strong><span>${currentSchedule.batchQty.toLocaleString()}</span></div>
+                <div class="summary-item"><strong>Sample Size (this station):</strong><span style="color: #667eea; font-weight: 600;">${currentSchedule.sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span></div>
+                <div class="summary-item"><strong>Inspected Today:</strong><span style="color: #667eea; font-weight: 600;">${totalCheckedToday}</span></div>
+                <div class="summary-item"><strong>Total at Station:</strong><span style="color: #10b981; font-weight: 600;">${newTotal}</span></div>
+                <div class="summary-item"><strong>Remaining:</strong><span style="color: #f59e0b; font-weight: 600;">${remaining}</span></div>
                 <hr style="margin: 15px 0; border: none; border-top: 1px solid #e5e7eb;">
-                <div class="summary-item">
-                    <strong>Passed Today:</strong>
-                    <span style="color: #10b981; font-weight: 600;">${totalPass}</span>
-                </div>
-                <div class="summary-item">
-                    <strong>Failed Today:</strong>
-                    <span style="color: #ef4444; font-weight: 600;">${totalFail}</span>
-                </div>
+                <div class="summary-item"><strong>Passed Today:</strong><span style="color: #10b981; font-weight: 600;">${totalPass}</span></div>
+                <div class="summary-item"><strong>Failed Today:</strong><span style="color: #ef4444; font-weight: 600;">${totalFail}</span></div>
             `;
         }
 
@@ -2338,7 +2604,6 @@
             goToStart();
         }
 
-        // Settings functions
         function showSettingsModal() {
             document.getElementById('settings-modal').classList.add('active');
         }
