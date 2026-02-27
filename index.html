@@ -246,6 +246,7 @@
             <button class="btn btn-primary" onclick="showDashboard()">📊 Dashboard & Reports</button>
             <button class="btn btn-secondary" onclick="showDownloadControlSheet()">📥 Download Control Sheet</button>
             <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
+            <button class="btn btn-secondary" onclick="showSkillMatrixStandalone()">👷 Inspector Skill Matrix</button>
         </div>
 
         <!-- ── Screen: Dashboard ─────────────────────────────── -->
@@ -377,16 +378,17 @@
             <h2 style="margin-bottom:20px;">Inspection Setup</h2>
 
             <div class="form-group">
-                <label>Part Number *</label>
-                <input type="text" id="part-no" required>
-            </div>
-
-            <div class="form-group">
                 <label>Schedule Number *</label>
                 <input type="text" id="schedule-no" required
                     oninput="onScheduleNoInput()"
-                    onblur="checkExistingSchedule()">
-                <p style="font-size:12px;color:#666;margin-top:5px;">Same schedule can go through multiple stations</p>
+                    onblur="checkExistingSchedule()"
+                    placeholder="e.g. SC-2024-001">
+                <p style="font-size:12px;color:#666;margin-top:5px;">Type schedule number — Part No and Batch Qty will auto-fill if it already exists.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Part Number *</label>
+                <input type="text" id="part-no" required oninput="onPartNoInput()" placeholder="e.g. CMU-001-A">
             </div>
 
             <!-- NEW: Schedule entry summary shows here -->
@@ -751,7 +753,7 @@ function goToStart() {
     // Reset form fields
     ['part-no','schedule-no','batch-qty','station','substation','operator-name','inspector-name'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.value = ''; if (el.readOnly) el.readOnly = false; }
+        if (el) { el.value = ''; if (el.readOnly) el.readOnly = false; el.style.background = ''; el.title = ''; }
     });
     document.getElementById('check-codes').innerHTML = '';
     document.getElementById('existing-schedule-alert').style.display = 'none';
@@ -775,15 +777,29 @@ function goBackToEdit() {
 
 // ── SCHEDULE LOOKUP ON ENTRY ───────────────────────────────
 // Debounced: fires 600ms after typing stops
+// Triggered by schedule no input. Also triggered by part no input (onPartNoInput).
 function onScheduleNoInput() {
     clearTimeout(scheduleInputTimer);
-    const partNo    = document.getElementById('part-no').value.trim();
-    const scheduleNo= document.getElementById('schedule-no').value.trim();
+    const scheduleNo = document.getElementById('schedule-no').value.trim();
     if (!scheduleNo) {
         document.getElementById('schedule-entry-summary').style.display = 'none';
         return;
     }
-    scheduleInputTimer = setTimeout(() => fetchScheduleSummary(scheduleNo, partNo), 600);
+    scheduleInputTimer = setTimeout(() => {
+        const partNo = document.getElementById('part-no').value.trim();
+        fetchScheduleSummary(scheduleNo, partNo);
+    }, 600);
+}
+
+// Also fires when user types a part no — re-fetches with both values
+function onPartNoInput() {
+    const scheduleNo = document.getElementById('schedule-no').value.trim();
+    if (!scheduleNo) return;
+    clearTimeout(scheduleInputTimer);
+    scheduleInputTimer = setTimeout(() => {
+        const partNo = document.getElementById('part-no').value.trim();
+        fetchScheduleSummary(scheduleNo, partNo);
+    }, 600);
 }
 
 async function fetchScheduleSummary(scheduleNo, partNo) {
@@ -800,7 +816,15 @@ async function fetchScheduleSummary(scheduleNo, partNo) {
             return;
         }
 
-        // Auto-fill batch qty
+        // ── Auto-fill Part No if blank (backend always returns it) ──
+        const pnInput = document.getElementById('part-no');
+        if (!pnInput.value && data.partNo) {
+            pnInput.value = data.partNo;
+            pnInput.style.background = '#f0fdf4';
+            pnInput.title = 'Auto-filled from existing schedule';
+        }
+
+        // ── Auto-fill Batch Qty if blank ──────────────────────────
         const bqInput = document.getElementById('batch-qty');
         if (!bqInput.value && data.batchQty) {
             bqInput.value = data.batchQty;
@@ -1548,6 +1572,19 @@ function displaySummary(totalCheckedToday, submissionSuccess, checks) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────
+// Open dashboard directly on the Skill Matrix tab
+function showSkillMatrixStandalone() {
+    if (!requireConfig()) return;
+    showScreen('screen-dashboard');
+    // Activate the Skills tab
+    document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
+    const skillsTab = document.querySelector('.dashboard-tab[onclick*="skills"]');
+    if (skillsTab) skillsTab.classList.add('active');
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('dashboard-skills').classList.add('active');
+    loadSkillMatrix();
+}
+
 function showDashboard() {
     if (!requireConfig()) return;
     showScreen('screen-dashboard');
