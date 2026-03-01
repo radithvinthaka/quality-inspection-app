@@ -190,24 +190,57 @@
         .loading-spinner { width: 60px; height: 60px; border: 6px solid #e5e7eb; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-text { margin-top: 20px; font-size: 18px; font-weight: 600; color: #667eea; }
-        /* Skill matrix */
-        .skill-matrix-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .skill-matrix-table th { background: #f3f4f6; padding: 8px 12px; text-align: center; font-weight: 700; white-space: nowrap; border: 1px solid #e5e7eb; }
-        .skill-matrix-table th:first-child { text-align: left; min-width: 140px; }
-        .skill-matrix-table td { padding: 8px 12px; text-align: center; border: 1px solid #e5e7eb; }
-        .skill-matrix-table td:first-child { text-align: left; font-weight: 600; }
-        .skill-cell { border-radius: 6px; padding: 4px 8px; font-weight: 700; display: inline-block; min-width: 50px; }
-        .skill-5 { background: #d1fae5; color: #065f46; }
-        .skill-4 { background: #bbf7d0; color: #166534; }
-        .skill-3 { background: #fef3c7; color: #92400e; }
-        .skill-2 { background: #fed7aa; color: #9a3412; }
-        .skill-1 { background: #fee2e2; color: #991b1b; }
-        .skill-0 { background: #f3f4f6; color: #9ca3af; }
-        .star-btn {
-            font-size: 28px; background: none; border: none; cursor: pointer;
-            color: #d1d5db; transition: color 0.15s ease; padding: 0 4px;
+        /* ── Skill Matrix ──────────────────────────────── */
+        .sm-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 700px; }
+        .sm-table th {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: white; padding: 10px 8px; text-align: center;
+            font-weight: 700; white-space: nowrap;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            position: sticky; top: 0; z-index: 2;
         }
+        .sm-table th:first-child { text-align: left; min-width: 150px; border-radius: 8px 0 0 0; }
+        .sm-table th:last-child  { border-radius: 0 8px 0 0; border-right: none; }
+        .sm-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; }
+        .sm-table td:first-child { text-align: left; font-weight: 600; background: #fafafa; position: sticky; left: 0; z-index: 1; padding-left: 12px; }
+        .sm-table tr:hover td { background: #f5f3ff; }
+        .sm-table tr:hover td:first-child { background: #ede9fe; }
+        .sm-cell {
+            display: inline-flex; flex-direction: column; align-items: center;
+            justify-content: center; width: 72px; height: 54px;
+            border-radius: 8px; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 2px solid transparent; font-weight: 700;
+        }
+        .sm-cell:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .sm-cell .sm-stars { font-size: 11px; letter-spacing: -1px; }
+        .sm-cell .sm-pct   { font-size: 11px; margin-top: 2px; opacity: 0.85; }
+        .sm-5 { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .sm-4 { background: #bbf7d0; color: #166534; border-color: #86efac; }
+        .sm-3 { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .sm-2 { background: #fed7aa; color: #9a3412; border-color: #fdba74; }
+        .sm-1 { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .sm-0 { background: #f9fafb; color: #9ca3af; border-color: #e5e7eb; }
+        .sm-gap { background: #fff1f2; color: #e11d48; border-color: #fda4af; } /* training gap */
+        .sm-na  { background: #f9fafb; color: #d1d5db; border-color: #e5e7eb; }
+        .star-btn { font-size: 28px; background: none; border: none; cursor: pointer; color: #d1d5db; transition: color 0.15s; padding: 0 4px; }
         .star-btn.active { color: #f59e0b; }
+        /* Operator profile panel */
+        .op-profile-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .op-profile-overlay.active { display: flex; }
+        .op-profile-panel {
+            background: white; border-radius: 20px; max-width: 600px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 30px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+        }
+        .op-station-bar { margin-bottom: 12px; }
+        .op-station-bar-track { background: #e5e7eb; height: 24px; border-radius: 8px; overflow: hidden; }
+        .op-station-bar-fill  { height: 100%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 12px; font-weight: 700; transition: width 0.5s; }
+        .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 4px; }
         .skill-inspector-card { background: #f9fafb; padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #e5e7eb; }
         @media print {
             body { background: white; padding: 0; }
@@ -246,7 +279,7 @@
             <button class="btn btn-primary" onclick="showDashboard()">📊 Dashboard & Reports</button>
             <button class="btn btn-secondary" onclick="showDownloadControlSheet()">📥 Download Control Sheet</button>
             <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
-            <button class="btn btn-secondary" onclick="showSkillMatrixStandalone()">👷 Inspector Skill Matrix</button>
+            <button class="btn btn-secondary" onclick="showSkillMatrixStandalone()">👷 Operator Skill Matrix</button>
         </div>
 
         <!-- ── Screen: Dashboard ─────────────────────────────── -->
@@ -271,7 +304,7 @@
                     <button class="dashboard-tab" onclick="showDashboardTab('defects', event)">Defect Analysis</button>
                     <button class="dashboard-tab" onclick="showDashboardTab('trends', event)">Trends</button>
                     <button class="dashboard-tab" onclick="showDashboardTab('monthly', event)">Monthly Comparison</button>
-                    <button class="dashboard-tab" onclick="showDashboardTab('skills', event)">👷 Skill Matrix</button>
+                    <button class="dashboard-tab" onclick="showDashboardTab('skills', event)">👷 Operator Skills</button>
                 </div>
                 <!-- Overall -->
                 <div class="dashboard-section active" id="dashboard-overall">
@@ -324,23 +357,60 @@
                 </div>
                 <!-- Skill Matrix -->
                 <div class="dashboard-section" id="dashboard-skills">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+                    <!-- Controls row -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
                         <div>
-                            <h3 style="margin:0;">👷 Inspector Skill Matrix</h3>
-                            <p style="font-size:13px;color:#666;margin-top:4px;">Admin ratings (1–5) + auto-calculated from inspection history</p>
+                            <h3 style="margin:0;">👷 Operator Skill Matrix</h3>
+                            <p style="font-size:13px;color:#666;margin-top:4px;">How each operator performs at every station — auto-updated from inspection history.</p>
                         </div>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                            <button class="btn-sm btn-primary" style="background:#667eea;color:white;" onclick="rebuildSkillStats()">🔄 Rebuild from History</button>
-                            <button class="btn-sm btn-secondary" style="background:#f0f0f0;" onclick="showAddSkillModal()">+ Set Rating</button>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn-sm" style="background:#667eea;color:white;padding:9px 16px;border-radius:8px;font-weight:600;" onclick="rebuildSkillStats()">🔄 Sync from History</button>
+                            <button class="btn-sm" style="background:#10b981;color:white;padding:9px 16px;border-radius:8px;font-weight:600;" onclick="showAddSkillModal()">+ Add / Edit Operator Rating</button>
+                            <button class="btn-sm" style="background:#f0f0f0;color:#333;padding:9px 16px;border-radius:8px;font-weight:600;" onclick="toggleGapHighlight()" id="gap-toggle-btn">🎯 Show Training Gaps</button>
                         </div>
                     </div>
-                    <div class="chart-container" style="overflow-x:auto;">
-                        <div class="chart-title">Skill Matrix — All Stations</div>
-                        <div id="skill-matrix-grid"></div>
+
+                    <!-- KPI strip -->
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;" id="sm-kpi-strip"></div>
+
+                    <!-- View toggle -->
+                    <div style="display:flex;gap:8px;margin-bottom:14px;">
+                        <button onclick="setSkillView('matrix')" id="sm-btn-matrix"
+                            style="padding:8px 18px;border-radius:8px;border:2px solid #667eea;background:#667eea;color:white;font-weight:600;cursor:pointer;">
+                            🗂 Matrix View
+                        </button>
+                        <button onclick="setSkillView('cards')" id="sm-btn-cards"
+                            style="padding:8px 18px;border-radius:8px;border:2px solid #e5e7eb;background:white;color:#333;font-weight:600;cursor:pointer;">
+                            🪪 Operator Cards
+                        </button>
+                        <button onclick="setSkillView('gaps')" id="sm-btn-gaps"
+                            style="padding:8px 18px;border-radius:8px;border:2px solid #e5e7eb;background:white;color:#333;font-weight:600;cursor:pointer;">
+                            ⚠️ Training Gaps
+                        </button>
                     </div>
-                    <div class="chart-container">
-                        <div class="chart-title">Inspector Performance Summary</div>
+
+                    <!-- Matrix view -->
+                    <div id="sm-view-matrix">
+                        <div class="chart-container" style="overflow-x:auto;padding:16px;">
+                            <div id="skill-matrix-grid"></div>
+                            <div id="sm-legend" style="margin-top:14px;font-size:12px;color:#666;display:flex;flex-wrap:wrap;gap:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Operator Cards view -->
+                    <div id="sm-view-cards" style="display:none;">
                         <div id="skill-inspector-summary"></div>
+                    </div>
+
+                    <!-- Training Gaps view -->
+                    <div id="sm-view-gaps" style="display:none;">
+                        <div class="chart-container">
+                            <div class="chart-title">⚠️ Training Gap Analysis</div>
+                            <p style="font-size:13px;color:#666;margin-bottom:14px;">
+                                Operators rated ≤2 or with no experience at a station. These need targeted training.
+                            </p>
+                            <div id="sm-gaps-content"></div>
+                        </div>
                     </div>
                 </div>
                 <button class="btn btn-secondary" onclick="goToStart()">← Back to Home</button>
@@ -423,7 +493,7 @@
 
             <div class="form-group">
                 <label>Station *</label>
-                <select id="station" onchange="updateStationChecks(); checkExistingSchedule(); onInspectorNameInput();">
+                <select id="station" onchange="updateStationChecks(); checkExistingSchedule(); showOperatorSkillHint();">
                     <option value="">Select Station</option>
                     <option>INNER CUTTING</option><option>OUTER CUTTING</option><option>SLEEVE CUTTING</option>
                     <option>GLUING</option><option>HEAT EMBORSING</option><option>SWAGING</option>
@@ -445,15 +515,15 @@
             </div>
 
             <div class="form-group">
-                <label>Operator Name (Optional)</label>
-                <input type="text" id="operator-name">
+                <label>Operator Name *</label>
+                <input type="text" id="operator-name" required oninput="onOperatorNameInput()" placeholder="Name of person running the machine">
+                <div id="inspector-skill-hint" style="display:none;margin-top:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #10b981;font-size:13px;"></div>
             </div>
 
             <div class="form-group">
                 <label>Inspector Name *</label>
                 <input type="text" id="inspector-name" required
                     oninput="onInspectorNameInput()">
-                <div id="inspector-skill-hint" style="display:none;margin-top:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;border:1px solid #10b981;font-size:13px;"></div>
             </div>
 
             <button class="btn btn-primary" onclick="proceedToInspection()">Continue to Quality Check</button>
@@ -560,11 +630,11 @@
 <div class="modal" id="skill-modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeSkillModal()">&times;</span>
-        <div class="modal-header">⭐ Set Inspector Skill Rating</div>
+        <div class="modal-header">⭐ Set Operator Skill Rating</div>
         <div class="form-group">
-            <label>Inspector Name *</label>
-            <input type="text" id="skill-inspector" placeholder="Enter inspector name" list="skill-inspectors-list">
-            <datalist id="skill-inspectors-list"></datalist>
+            <label>Operator Name *</label>
+            <input type="text" id="skill-inspector" placeholder="Enter operator name" list="skill-operators-list">
+            <datalist id="skill-operators-list"></datalist>
         </div>
         <div class="form-group">
             <label>Station *</label>
@@ -593,6 +663,25 @@
         </div>
         <button class="btn btn-primary" onclick="saveSkillRating()">Save Rating</button>
         <div id="skill-save-status" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- Operator Profile Overlay -->
+<div class="op-profile-overlay" id="op-profile-overlay" onclick="closeOpProfile(event)">
+    <div class="op-profile-panel" onclick="event.stopPropagation()">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
+            <div>
+                <div id="op-profile-name" style="font-size:24px;font-weight:700;color:#333;"></div>
+                <div id="op-profile-meta" style="font-size:13px;color:#666;margin-top:4px;"></div>
+            </div>
+            <span style="font-size:28px;cursor:pointer;color:#999;line-height:1;" onclick="closeOpProfile()">×</span>
+        </div>
+        <div id="op-profile-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;"></div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#333;">Performance by Station</div>
+        <div id="op-profile-stations"></div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e5e7eb;">
+            <button class="btn btn-primary" style="margin-bottom:0;" onclick="editCurrentOperator()">✏️ Edit Ratings</button>
+        </div>
     </div>
 </div>
 
@@ -2096,6 +2185,8 @@ function saveSettings() {
     alert('Settings saved successfully!');
     closeSettingsModal();
     checkConfiguration();
+}
+
 // ── SKILL MATRIX ──────────────────────────────────────────
 const STATIONS_LIST = [
     'INNER CUTTING','OUTER CUTTING','SLEEVE CUTTING','GLUING',
@@ -2103,141 +2194,401 @@ const STATIONS_LIST = [
 ];
 const RATING_LABELS = { 0:'Not Rated', 1:'Beginner', 2:'Developing', 3:'Competent', 4:'Proficient', 5:'Expert' };
 const RATING_STARS  = { 0:'—', 1:'★☆☆☆☆', 2:'★★☆☆☆', 3:'★★★☆☆', 4:'★★★★☆', 5:'★★★★★' };
+const RATING_COLORS = { 0:'#9ca3af', 1:'#ef4444', 2:'#f97316', 3:'#f59e0b', 4:'#10b981', 5:'#059669' };
 
-let skillMatrixData = null;
-let selectedStarRating = 0;
+let skillMatrixData    = null;
+let currentStarRating  = 0;
+let currentSkillView   = 'matrix';
+let highlightGaps      = false;
+let currentProfileOp   = null; // for "edit from profile"
 
+// ── LOAD ────────────────────────────────────────────────────
 async function loadSkillMatrix() {
     const url = localStorage.getItem('googleSheetsUrl');
     if (!url) return;
     try {
-        showLoading('Loading skill matrix...');
+        showLoading('Loading operator skill matrix...');
         const resp = await fetch(`${url}?action=getSkillMatrix`);
         const data = await resp.json();
         hideLoading();
         if (data.error) { console.error('Skill matrix error:', data.error); return; }
         skillMatrixData = data;
+        renderSkillKPIs(data);
         renderSkillMatrix(data);
         renderSkillInspectorSummary(data);
+        renderTrainingGaps(data);
+        renderSkillLegend();
         // Populate inspector autocomplete
-        const dl = document.getElementById('skill-inspectors-list');
+        const dl = document.getElementById('skill-operators-list');
         if (dl) {
             dl.innerHTML = '';
             (data.inspectors || []).forEach(n => {
-                const opt = document.createElement('option');
-                opt.value = n;
-                dl.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = n; dl.appendChild(opt);
             });
         }
-    } catch(e) {
-        console.error('Skill matrix load error:', e);
+    } catch(err) {
+        console.error('Skill matrix load error:', err);
         hideLoading();
     }
 }
 
+// ── KPI STRIP ───────────────────────────────────────────────
+function renderSkillKPIs(data) {
+    const strip = document.getElementById('sm-kpi-strip');
+    if (!strip) return;
+    const skills = data.skills || [];
+    const inspectors = [...new Set(skills.map(s => s.inspector))];
+    const rated = skills.filter(s => s.effectiveRating > 0);
+    const gaps  = skills.filter(s => s.effectiveRating <= 2 || (s.effectiveRating === 0 && s.autoInspections === 0));
+    const avgRating = rated.length > 0 ? (rated.reduce((a,s)=>a+s.effectiveRating,0)/rated.length).toFixed(1) : '—';
+    const avgPass   = skills.filter(s=>s.autoInspections>0).length > 0
+        ? (skills.filter(s=>s.autoInspections>0).reduce((a,s)=>a+s.autoPassRate,0) / skills.filter(s=>s.autoInspections>0).length).toFixed(1)
+        : '—';
+
+    const kpis = [
+        { label:'Total Operators', value: inspectors.length, color:'#667eea' },
+        { label:'Stations Covered', value: [...new Set(skills.map(s=>s.station))].length + ' / ' + STATIONS_LIST.length, color:'#10b981' },
+        { label:'Avg Skill Rating', value: avgRating !== '—' ? avgRating + '/5' : '—', color: avgRating >= 4 ? '#10b981' : avgRating >= 3 ? '#f59e0b' : '#ef4444' },
+        { label:'Avg Pass Rate', value: avgPass !== '—' ? avgPass + '%' : '—', color: avgPass >= 95 ? '#10b981' : '#f59e0b' },
+        { label:'Training Gaps', value: gaps.length, color: gaps.length > 0 ? '#ef4444' : '#10b981' },
+    ];
+
+    strip.innerHTML = kpis.map(k => `
+        <div style="background:white;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-left:4px solid ${k.color};">
+            <div style="font-size:11px;text-transform:uppercase;font-weight:700;color:#666;margin-bottom:6px;">${k.label}</div>
+            <div style="font-size:26px;font-weight:800;color:${k.color};">${k.value}</div>
+        </div>`).join('');
+}
+
+// ── MATRIX VIEW ─────────────────────────────────────────────
 function renderSkillMatrix(data) {
     const container = document.getElementById('skill-matrix-grid');
     if (!container) return;
-    const skills   = data.skills || [];
-    
-    // Build inspector × station map
-    const matrix  = {}; // matrix[inspector][station] = entry
-    const inspSet = {};
+    const skills = data.skills || [];
+
+    // Build map: matrix[inspector][station] = entry
+    const matrix = {}, inspSet = {};
     skills.forEach(s => {
         if (!matrix[s.inspector]) matrix[s.inspector] = {};
         matrix[s.inspector][s.station] = s;
         inspSet[s.inspector] = true;
     });
     const inspectors = Object.keys(inspSet).sort();
-    
+
     if (inspectors.length === 0) {
-        container.innerHTML = '<p style="color:#666;text-align:center;padding:30px;">No skill data yet. Complete some inspections or set ratings manually.</p>';
+        container.innerHTML = `<div style="text-align:center;padding:50px;color:#666;">
+            <div style="font-size:48px;margin-bottom:16px;">👷</div>
+            <strong>No operator data yet.</strong><br>
+            Complete some inspections or click <strong>Sync from History</strong> to populate.
+        </div>`;
         return;
     }
-    
-    let html = '<table class="skill-matrix-table"><thead><tr><th>Inspector</th>';
-    STATIONS_LIST.forEach(stn => { html += `<th>${stn.replace(' ', '<br>')}</th>`; });
-    html += '</tr></thead><tbody>';
-    
+
+    // Table header
+    let html = `<table class="sm-table"><thead><tr>
+        <th style="min-width:150px;">Operator</th>`;
+    STATIONS_LIST.forEach(stn => {
+        html += `<th style="min-width:80px;font-size:11px;">${stn.replace(/ /g,'<br>')}</th>`;
+    });
+    html += `<th style="min-width:90px;">Overall</th></tr></thead><tbody>`;
+
     inspectors.forEach(insp => {
-        html += `<tr><td>${insp}</td>`;
-        STATIONS_LIST.forEach(stn => {
-            const entry = matrix[insp] && matrix[insp][stn];
+        const stationEntries = STATIONS_LIST.map(stn => matrix[insp]?.[stn] || null);
+        const ratedEntries   = stationEntries.filter(e => e && e.effectiveRating > 0);
+        const avgR = ratedEntries.length > 0
+            ? (ratedEntries.reduce((a,e)=>a+e.effectiveRating,0)/ratedEntries.length).toFixed(1) : null;
+        const avgP = stationEntries.filter(e=>e&&e.autoInspections>0).length > 0
+            ? (stationEntries.filter(e=>e&&e.autoInspections>0).reduce((a,e)=>a+e.autoPassRate,0)
+               / stationEntries.filter(e=>e&&e.autoInspections>0).length).toFixed(1) : null;
+
+        html += `<tr>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+                        ${insp.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="font-weight:700;font-size:13px;">${insp}</div>
+                        <div style="font-size:11px;color:#666;">${ratedEntries.length}/${STATIONS_LIST.length} rated</div>
+                    </div>
+                </div>
+            </td>`;
+
+        stationEntries.forEach((entry, idx) => {
+            const stn = STATIONS_LIST[idx];
             if (entry) {
                 const r   = entry.effectiveRating;
                 const src = entry.adminRating > 0 ? '👤' : '📊';
-                const tip = `${RATING_LABELS[r]} | ${entry.autoInspections} inspections | ${entry.autoPassRate.toFixed(1)}% pass rate${entry.notes ? ' | ' + entry.notes : ''}`;
-                html += `<td><span class="skill-cell skill-${r}" title="${tip}" style="cursor:pointer;" onclick="quickEditSkill('${insp}','${stn}',${entry.adminRating},'${(entry.notes||'').replace(/'/g,'')}')">
-                    ${src} ${RATING_STARS[r] || '—'}
-                </span></td>`;
+                const pct = entry.autoPassRate > 0 ? entry.autoPassRate.toFixed(0) + '%' : '';
+                const isGap = highlightGaps && r <= 2;
+                const cls = isGap ? 'sm-gap' : `sm-${r}`;
+                const tip = `${insp} @ ${stn}: ${RATING_LABELS[r]} | ${entry.autoInspections} insp | ${entry.autoPassRate.toFixed(1)}% pass${entry.notes?' | '+entry.notes:''}`;
+                html += `<td>
+                    <div class="sm-cell ${cls}" title="${tip}"
+                        onclick="showOpCellMenu('${insp}','${stn}',${entry.adminRating},'${(entry.notes||'').replace(/'/g,'').replace(/"/g,'')}')">
+                        <div class="sm-stars">${RATING_STARS[r]}</div>
+                        <div class="sm-pct">${pct || src}</div>
+                    </div>
+                </td>`;
             } else {
-                html += `<td><span class="skill-cell skill-0" style="cursor:pointer;font-size:12px;" onclick="quickEditSkill('${insp}','${stn}',0,'')">Set</span></td>`;
+                html += `<td>
+                    <div class="sm-cell sm-na" title="No data for ${insp} at ${stn}"
+                        onclick="showOpCellMenu('${insp}','${stn}',0,'')">
+                        <div style="font-size:18px;opacity:0.4;">+</div>
+                        <div style="font-size:10px;color:#9ca3af;">No data</div>
+                    </div>
+                </td>`;
             }
         });
-        html += '</tr>';
+
+        // Overall column
+        const overallColor = avgR >= 4 ? '#10b981' : avgR >= 3 ? '#f59e0b' : avgR >= 1 ? '#ef4444' : '#9ca3af';
+        html += `<td>
+            <div style="cursor:pointer;" onclick="openOpProfile('${insp}')">
+                <div style="font-size:18px;font-weight:800;color:${overallColor};">${avgR ? avgR + '/5' : '—'}</div>
+                <div style="font-size:11px;color:#666;">${avgP ? avgP + '% pass' : 'no data'}</div>
+            </div>
+        </td></tr>`;
     });
-    
+
     html += '</tbody></table>';
-    html += `<div style="margin-top:12px;font-size:12px;color:#666;">
-        👤 = Admin set &nbsp;|&nbsp; 📊 = Auto from history &nbsp;|&nbsp;
-        <span style="color:#065f46;font-weight:600;">★★★★★ Expert</span> &nbsp;
-        <span style="color:#166534;">★★★★☆ Proficient</span> &nbsp;
-        <span style="color:#92400e;">★★★☆☆ Competent</span> &nbsp;
-        <span style="color:#9a3412;">★★☆☆☆ Developing</span> &nbsp;
-        <span style="color:#991b1b;">★☆☆☆☆ Beginner</span>
-    </div>`;
     container.innerHTML = html;
 }
 
+// ── SKILL LEGEND ────────────────────────────────────────────
+function renderSkillLegend() {
+    const leg = document.getElementById('sm-legend');
+    if (!leg) return;
+    leg.innerHTML = [5,4,3,2,1,0].map(r => `
+        <span>
+            <span class="legend-dot" style="background:${RATING_COLORS[r]};"></span>
+            <strong>${r}</strong> — ${RATING_LABELS[r]}
+        </span>`).join('') +
+        `<span style="margin-left:8px;color:#999;">👤 Admin set &nbsp; 📊 Auto from history</span>`;
+}
+
+// ── OPERATOR CARDS VIEW ─────────────────────────────────────
 function renderSkillInspectorSummary(data) {
     const container = document.getElementById('skill-inspector-summary');
     if (!container) return;
-    const skills    = data.skills || [];
-    
-    // Group by inspector
+    const skills = data.skills || [];
+
     const byInsp = {};
     skills.forEach(s => {
-        if (!byInsp[s.inspector]) byInsp[s.inspector] = { inspector: s.inspector, stations: [], totalInsp: 0, totalPassRate: 0, count: 0 };
+        if (!byInsp[s.inspector]) byInsp[s.inspector] = { inspector: s.inspector, stations: [], totalInsp: 0 };
         byInsp[s.inspector].stations.push(s);
         byInsp[s.inspector].totalInsp += s.autoInspections;
-        if (s.autoPassRate > 0) { byInsp[s.inspector].totalPassRate += s.autoPassRate; byInsp[s.inspector].count++; }
     });
-    
+
     let html = '';
-    Object.values(byInsp).sort((a,b) => b.totalInsp - a.totalInsp).forEach(insp => {
-        const avgPassRate = insp.count > 0 ? (insp.totalPassRate / insp.count).toFixed(1) : '—';
-        const ratedCount  = insp.stations.filter(s => s.effectiveRating > 0).length;
-        const avgRating   = ratedCount > 0 ? (insp.stations.filter(s=>s.effectiveRating>0).reduce((a,s)=>a+s.effectiveRating,0)/ratedCount).toFixed(1) : '—';
-        const passColor   = avgPassRate !== '—' ? (avgPassRate >= 95 ? '#10b981' : avgPassRate >= 90 ? '#f59e0b' : '#ef4444') : '#6b7280';
-        
-        html += `<div class="skill-inspector-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                <div>
-                    <strong style="font-size:15px;">${insp.inspector}</strong>
-                    <span style="font-size:12px;color:#666;margin-left:10px;">${insp.totalInsp} total inspections across ${insp.stations.length} station(s)</span>
+    Object.values(byInsp).sort((a,b) => b.totalInsp - a.totalInsp).forEach(op => {
+        const ratedStations = op.stations.filter(s => s.effectiveRating > 0);
+        const avgRating = ratedStations.length > 0
+            ? (ratedStations.reduce((a,s)=>a+s.effectiveRating,0)/ratedStations.length).toFixed(1) : null;
+        const passStations = op.stations.filter(s => s.autoInspections > 0);
+        const avgPass = passStations.length > 0
+            ? (passStations.reduce((a,s)=>a+s.autoPassRate,0)/passStations.length).toFixed(1) : null;
+        const passColor = avgPass ? (avgPass >= 95 ? '#10b981' : avgPass >= 90 ? '#f59e0b' : '#ef4444') : '#9ca3af';
+        const ratingColor = avgRating ? (avgRating >= 4 ? '#10b981' : avgRating >= 3 ? '#f59e0b' : '#ef4444') : '#9ca3af';
+
+        html += `<div class="skill-inspector-card" style="cursor:pointer;" onclick="openOpProfile('${op.inspector}')">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;">
+                        ${op.inspector.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="font-size:16px;font-weight:700;">${op.inspector}</div>
+                        <div style="font-size:12px;color:#666;">${op.totalInsp} total inspections · ${ratedStations.length}/${STATIONS_LIST.length} stations rated</div>
+                    </div>
                 </div>
-                <div style="display:flex;gap:15px;font-size:14px;">
-                    <div>Avg Pass Rate: <strong style="color:${passColor};">${avgPassRate}%</strong></div>
-                    <div>Avg Skill: <strong style="color:#667eea;">${avgRating !== '—' ? avgRating + '/5' : '—'}</strong></div>
+                <div style="display:flex;gap:16px;text-align:right;">
+                    <div><div style="font-size:22px;font-weight:800;color:${ratingColor};">${avgRating ? avgRating + '/5' : '—'}</div><div style="font-size:11px;color:#666;">Avg Skill</div></div>
+                    <div><div style="font-size:22px;font-weight:800;color:${passColor};">${avgPass ? avgPass + '%' : '—'}</div><div style="font-size:11px;color:#666;">Avg Pass</div></div>
                 </div>
             </div>
-            <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
-                ${insp.stations.map(s => {
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${op.stations.map(s => {
                     const r = s.effectiveRating;
-                    return `<span class="skill-cell skill-${r}" style="font-size:12px;">${s.station}: ${RATING_STARS[r]||'—'}</span>`;
+                    return `<span class="sm-cell sm-${r}" style="width:auto;height:auto;padding:4px 10px;font-size:12px;" title="${s.station}: ${s.autoInspections} insp, ${s.autoPassRate.toFixed(1)}% pass">
+                        ${s.station.split(' ')[0]}: ${RATING_STARS[r]||'—'}
+                    </span>`;
                 }).join('')}
             </div>
         </div>`;
     });
-    
-    if (!html) html = '<p style="color:#666;text-align:center;padding:30px;">No inspector data yet.</p>';
+
+    if (!html) html = `<div style="text-align:center;padding:40px;color:#666;">No operator data yet. Complete inspections first.</div>`;
     container.innerHTML = html;
 }
 
-// Skill rating modal
-let currentStarRating = 0;
-function showAddSkillModal() {
-    document.getElementById('skill-inspector').value = '';
+// ── TRAINING GAPS VIEW ───────────────────────────────────────
+function renderTrainingGaps(data) {
+    const container = document.getElementById('sm-gaps-content');
+    if (!container) return;
+    const skills = data.skills || [];
+    const inspectors = [...new Set(skills.map(s => s.inspector))].sort();
+
+    let gapRows = '';
+    let totalGaps = 0;
+
+    inspectors.forEach(insp => {
+        const gaps = [];
+        STATIONS_LIST.forEach(stn => {
+            const entry = skills.find(s => s.inspector === insp && s.station === stn);
+            if (!entry) {
+                gaps.push({ station: stn, type: 'No Experience', severity: 'high' });
+            } else if (entry.effectiveRating <= 1) {
+                gaps.push({ station: stn, type: `Beginner (${RATING_STARS[1]})`, severity: 'high', inspections: entry.autoInspections });
+            } else if (entry.effectiveRating === 2) {
+                gaps.push({ station: stn, type: `Developing (${RATING_STARS[2]})`, severity: 'medium', inspections: entry.autoInspections });
+            }
+        });
+        if (gaps.length > 0) {
+            totalGaps += gaps.length;
+            gapRows += `<div style="background:white;border:2px solid #fca5a5;border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <div style="font-weight:700;font-size:15px;">${insp}</div>
+                    <span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:10px;font-size:13px;font-weight:700;">
+                        ${gaps.length} gap${gaps.length>1?'s':''}
+                    </span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    ${gaps.map(g => `
+                        <div style="background:${g.severity==='high'?'#fee2e2':'#fef3c7'};border:1px solid ${g.severity==='high'?'#fca5a5':'#fcd34d'};
+                            border-radius:8px;padding:6px 12px;font-size:12px;">
+                            <strong>${g.station}</strong><br>
+                            <span style="color:${g.severity==='high'?'#991b1b':'#92400e'};">${g.type}</span>
+                            ${g.inspections!=null ? `<br><span style="color:#666;">${g.inspections} insp done</span>` : ''}
+                        </div>`).join('')}
+                </div>
+            </div>`;
+        }
+    });
+
+    if (!gapRows) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#10b981;">
+            <div style="font-size:48px;">✅</div>
+            <strong style="font-size:16px;">No training gaps found!</strong><br>
+            <span style="color:#666;">All rated operators are at Competent level or above.</span>
+        </div>`;
+    } else {
+        container.innerHTML = `<div style="background:#fee2e2;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#991b1b;">
+            <strong>${totalGaps} training gap${totalGaps>1?'s':''} identified</strong> across ${inspectors.filter(i=>skills.some(s=>s.inspector===i&&(s.effectiveRating<=2||!s.effectiveRating))).length} operators.
+        </div>` + gapRows;
+    }
+}
+
+// ── VIEW TOGGLE ──────────────────────────────────────────────
+function setSkillView(view) {
+    currentSkillView = view;
+    ['matrix','cards','gaps'].forEach(v => {
+        document.getElementById(`sm-view-${v}`).style.display = v === view ? 'block' : 'none';
+        const btn = document.getElementById(`sm-btn-${v}`);
+        if (btn) {
+            btn.style.background = v === view ? '#667eea' : 'white';
+            btn.style.color      = v === view ? 'white'   : '#333';
+            btn.style.borderColor= v === view ? '#667eea' : '#e5e7eb';
+        }
+    });
+}
+
+function toggleGapHighlight() {
+    highlightGaps = !highlightGaps;
+    const btn = document.getElementById('gap-toggle-btn');
+    if (btn) {
+        btn.style.background = highlightGaps ? '#ef4444' : '#f0f0f0';
+        btn.style.color      = highlightGaps ? 'white'   : '#333';
+        btn.textContent      = highlightGaps ? '🎯 Hide Gaps' : '🎯 Show Training Gaps';
+    }
+    if (skillMatrixData) renderSkillMatrix(skillMatrixData);
+}
+
+// ── CELL CLICK MENU (quick edit) ────────────────────────────
+function showOpCellMenu(inspector, station, currentRating, notes) {
+    document.getElementById('skill-inspector').value = inspector;
+    document.getElementById('skill-station').value   = station;
+    document.getElementById('skill-notes').value     = notes || '';
+    document.getElementById('skill-save-status').innerHTML = '';
+    setStarRating(currentRating || 0);
+    document.getElementById('skill-modal').classList.add('active');
+}
+
+// ── OPERATOR PROFILE ────────────────────────────────────────
+function openOpProfile(inspectorName) {
+    if (!skillMatrixData) return;
+    currentProfileOp = inspectorName;
+    const skills = (skillMatrixData.skills || []).filter(s => s.inspector === inspectorName);
+    const overlay = document.getElementById('op-profile-overlay');
+    if (!overlay) return;
+
+    // Avatar + name
+    document.getElementById('op-profile-name').textContent = inspectorName;
+    const totalInsp = skills.reduce((a,s)=>a+s.autoInspections,0);
+    const stations  = skills.filter(s=>s.autoInspections>0).length;
+    document.getElementById('op-profile-meta').textContent = `${totalInsp} total inspections · ${stations} active stations`;
+
+    // KPIs
+    const ratedSkills = skills.filter(s=>s.effectiveRating>0);
+    const avgR  = ratedSkills.length>0 ? (ratedSkills.reduce((a,s)=>a+s.effectiveRating,0)/ratedSkills.length).toFixed(1) : '—';
+    const passS = skills.filter(s=>s.autoInspections>0);
+    const avgP  = passS.length>0 ? (passS.reduce((a,s)=>a+s.autoPassRate,0)/passS.length).toFixed(1) : '—';
+    const gaps  = STATIONS_LIST.filter(stn => {
+        const e = skills.find(s=>s.station===stn);
+        return !e || e.effectiveRating <= 2;
+    }).length;
+    const ratingColor = avgR!=='—' ? (avgR>=4?'#10b981':avgR>=3?'#f59e0b':'#ef4444') : '#9ca3af';
+    const passColor   = avgP!=='—' ? (avgP>=95?'#10b981':avgP>=90?'#f59e0b':'#ef4444') : '#9ca3af';
+
+    document.getElementById('op-profile-kpis').innerHTML = [
+        { label:'Avg Skill',  value: avgR!=='—' ? avgR+'/5' : '—', color: ratingColor },
+        { label:'Avg Pass Rate', value: avgP!=='—' ? avgP+'%' : '—', color: passColor },
+        { label:'Training Gaps', value: gaps, color: gaps>0?'#ef4444':'#10b981' },
+    ].map(k => `<div style="background:#f9fafb;border-radius:10px;padding:14px;text-align:center;border:2px solid ${k.color}20;">
+        <div style="font-size:22px;font-weight:800;color:${k.color};">${k.value}</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">${k.label}</div>
+    </div>`).join('');
+
+    // Station bars
+    let stationsHtml = '';
+    STATIONS_LIST.forEach(stn => {
+        const entry = skills.find(s=>s.station===stn);
+        const r   = entry?.effectiveRating || 0;
+        const pct = entry?.autoPassRate    || 0;
+        const n   = entry?.autoInspections || 0;
+        const barW = (r / 5) * 100;
+        const barColor = RATING_COLORS[r];
+        const src = entry?.adminRating>0 ? '👤' : '📊';
+        stationsHtml += `<div class="op-station-bar">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+                <span style="font-weight:600;">${stn}</span>
+                <span style="color:${barColor};font-weight:700;">
+                    ${r>0 ? RATING_STARS[r] + ' ' + RATING_LABELS[r] : 'No Rating'}
+                    ${n>0 ? ' · ' + n + ' insp · ' + pct.toFixed(0) + '% pass' : ''}
+                    ${entry?.adminRating>0 ? ' '+src : ''}
+                </span>
+            </div>
+            <div class="op-station-bar-track">
+                <div class="op-station-bar-fill" style="width:${barW}%;background:${barColor};">
+                    ${r > 0 ? r + '/5' : ''}
+                </div>
+            </div>
+        </div>`;
+    });
+    document.getElementById('op-profile-stations').innerHTML = stationsHtml;
+    overlay.classList.add('active');
+}
+
+function closeOpProfile(event) {
+    if (!event || event.target === document.getElementById('op-profile-overlay')) {
+        document.getElementById('op-profile-overlay').classList.remove('active');
+    }
+}
+
+function editCurrentOperator() {
+    closeOpProfile();
+    if (!currentProfileOp) return;
+    document.getElementById('skill-inspector').value = currentProfileOp;
     document.getElementById('skill-station').value   = '';
     document.getElementById('skill-notes').value     = '';
     document.getElementById('skill-save-status').innerHTML = '';
@@ -2245,12 +2596,14 @@ function showAddSkillModal() {
     document.getElementById('skill-modal').classList.add('active');
 }
 
-function quickEditSkill(inspector, station, currentRating, notes) {
-    document.getElementById('skill-inspector').value = inspector;
-    document.getElementById('skill-station').value   = station;
-    document.getElementById('skill-notes').value     = notes;
+// ── SKILL RATING MODAL ───────────────────────────────────────
+function showAddSkillModal() {
+    currentProfileOp = null;
+    document.getElementById('skill-inspector').value = '';
+    document.getElementById('skill-station').value   = '';
+    document.getElementById('skill-notes').value     = '';
     document.getElementById('skill-save-status').innerHTML = '';
-    setStarRating(currentRating);
+    setStarRating(0);
     document.getElementById('skill-modal').classList.add('active');
 }
 
@@ -2264,7 +2617,8 @@ function setStarRating(val) {
     document.querySelectorAll('.star-btn').forEach(btn => {
         btn.classList.toggle('active', parseInt(btn.dataset.val) <= val);
     });
-    document.getElementById('rating-label').textContent = val > 0 ? `${val}/5 — ${RATING_LABELS[val]}` : 'Click a star to rate';
+    const lbl = document.getElementById('rating-label');
+    if (lbl) lbl.textContent = val > 0 ? `${val}/5 — ${RATING_LABELS[val]}` : 'Click a star to rate';
 }
 
 async function saveSkillRating() {
@@ -2273,28 +2627,25 @@ async function saveSkillRating() {
     const rating    = parseInt(document.getElementById('skill-rating').value) || 0;
     const notes     = document.getElementById('skill-notes').value.trim();
     const statusDiv = document.getElementById('skill-save-status');
-    
     if (!inspector || !station || rating < 1) {
-        statusDiv.innerHTML = '<div class="alert alert-warning" style="padding:8px;">Please fill inspector, station, and rating.</div>';
+        statusDiv.innerHTML = '<div class="alert alert-warning" style="padding:8px;">Please fill inspector, station, and rating (1–5).</div>';
         return;
     }
-    
     const url = localStorage.getItem('googleSheetsUrl');
     if (!url) return;
-    
     try {
-        statusDiv.innerHTML = '<div style="color:#667eea;">Saving...</div>';
+        statusDiv.innerHTML = '<div style="color:#667eea;font-weight:600;">Saving...</div>';
         const qUrl = `${url}?action=setSkillRating&inspector=${encodeURIComponent(inspector)}&station=${encodeURIComponent(station)}&rating=${rating}&notes=${encodeURIComponent(notes)}`;
         const resp = await fetch(qUrl);
         const data = await resp.json();
         if (data.status === 'success') {
-            statusDiv.innerHTML = '<div class="alert alert-success" style="padding:8px;">✓ Saved!</div>';
-            setTimeout(() => { closeSkillModal(); loadSkillMatrix(); }, 800);
+            statusDiv.innerHTML = '<div class="alert alert-success" style="padding:8px;">✅ Saved!</div>';
+            setTimeout(() => { closeSkillModal(); loadSkillMatrix(); }, 700);
         } else {
             statusDiv.innerHTML = `<div class="alert alert-warning" style="padding:8px;">${data.error || 'Save failed'}</div>`;
         }
-    } catch(e) {
-        statusDiv.innerHTML = '<div class="alert alert-warning" style="padding:8px;">Network error</div>';
+    } catch(err) {
+        statusDiv.innerHTML = '<div class="alert alert-warning" style="padding:8px;">Network error — please try again.</div>';
     }
 }
 
@@ -2302,40 +2653,68 @@ async function rebuildSkillStats() {
     const url = localStorage.getItem('googleSheetsUrl');
     if (!url) return;
     try {
-        showLoading('Rebuilding skill stats from history...');
+        showLoading('Syncing operator stats from inspection history...');
         const resp = await fetch(`${url}?action=rebuildSkillStats`);
         const data = await resp.json();
         hideLoading();
         if (data.status === 'success') {
             loadSkillMatrix();
         } else {
-            alert('Error: ' + (data.error || 'Unknown error'));
+            alert('Error: ' + (data.error || 'Unknown'));
         }
-    } catch(e) {
+    } catch(err) {
         hideLoading();
         alert('Network error');
     }
 }
 
-// Show inspector skill hint on inspection setup when name is typed
-function onInspectorNameInput() {
-    const name    = document.getElementById('inspector-name').value.trim();
+// ── OPERATOR SKILL HINT ON SETUP SCREEN ─────────────────────
+// Triggered when operator name or station changes
+function onOperatorNameInput() { showOperatorSkillHint(); }
+function onInspectorNameInput() { /* kept for station onchange compat */ showOperatorSkillHint(); }
+
+function showOperatorSkillHint() {
+    const name    = document.getElementById('operator-name').value.trim();
     const station = document.getElementById('station').value;
     const hintDiv = document.getElementById('inspector-skill-hint');
     if (!hintDiv) return;
-    
-    if (!name || !station || !skillMatrixData) { hintDiv.style.display = 'none'; return; }
-    
+    if (!name) { hintDiv.style.display = 'none'; return; }
+    if (!station) {
+        hintDiv.style.display = 'block';
+        hintDiv.style.background = '#f0fdf4';
+        hintDiv.style.borderColor = '#10b981';
+        hintDiv.innerHTML = `<span style="color:#6b7280;font-size:13px;">Select a station to see ${name}'s skill rating there.</span>`;
+        return;
+    }
+    if (!skillMatrixData) { hintDiv.style.display = 'none'; return; }
+
     const entry = (skillMatrixData.skills || []).find(s => s.inspector === name && s.station === station);
     if (entry && entry.effectiveRating > 0) {
-        const r   = entry.effectiveRating;
-        const cls = r >= 4 ? 'aql-pass' : r >= 3 ? 'aql-marginal' : 'aql-fail';
-        hintDiv.style.display = 'block';
-        hintDiv.innerHTML = `<span class="aql-badge ${cls}">${RATING_STARS[r]} ${RATING_LABELS[r]}</span>
-            &nbsp; ${entry.autoInspections} inspections at this station &nbsp;|&nbsp; ${entry.autoPassRate.toFixed(1)}% pass rate
-            ${entry.notes ? `<br><em style="font-size:12px;color:#666;">${entry.notes}</em>` : ''}`;
+        const r    = entry.effectiveRating;
+        const src  = entry.adminRating > 0 ? '👤 Admin rated' : '📊 Auto from history';
+        const cls  = r >= 4 ? 'aql-pass' : r >= 3 ? 'aql-marginal' : 'aql-fail';
+        const bdr  = r >= 4 ? '#10b981'  : r >= 3 ? '#f59e0b'       : '#ef4444';
+        hintDiv.style.display     = 'block';
+        hintDiv.style.background  = r >= 4 ? '#f0fdf4' : r >= 3 ? '#fef9c3' : '#fff1f2';
+        hintDiv.style.borderColor = bdr;
+        hintDiv.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span class="aql-badge ${cls}" style="font-size:14px;">${RATING_STARS[r]} ${RATING_LABELS[r]}</span>
+                <span style="font-size:12px;color:#6b7280;">${src}</span>
+            </div>
+            <div style="font-size:12px;color:#555;margin-top:6px;">
+                ${entry.autoInspections} inspections at <strong>${station}</strong>
+                &nbsp;·&nbsp; ${entry.autoPassRate.toFixed(1)}% pass rate
+                ${entry.notes ? `<br><em>${entry.notes}</em>` : ''}
+            </div>`;
     } else {
-        hintDiv.style.display = 'none';
+        hintDiv.style.display     = 'block';
+        hintDiv.style.background  = '#fafafa';
+        hintDiv.style.borderColor = '#e5e7eb';
+        hintDiv.innerHTML = `<span style="color:#9ca3af;font-size:13px;">
+            No skill record for <strong>${name}</strong> at <strong>${station}</strong> yet.
+            Rating will build automatically as they complete inspections.
+        </span>`;
     }
 }
 
