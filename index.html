@@ -536,23 +536,14 @@
             <h2 style="margin-bottom:10px;">Quality Check</h2>
 
             <div style="background:#fef3c7;padding:15px;border-radius:10px;margin-bottom:20px;border:2px solid #f59e0b;">
-                <h4 style="color:#92400e;margin-bottom:10px;">📦 Items to Inspect Today</h4>
-                <div style="display:flex;gap:20px;align-items:center;">
-                    <div style="flex:1;">
-                        <label style="margin-bottom:5px;display:block;font-weight:600;">Quantity to Check:</label>
-                        <input type="number" id="batch-check-qty" min="1" placeholder="Enter quantity"
-                            style="width:100%;padding:12px;border:2px solid #f59e0b;border-radius:8px;font-size:16px;"
-                            onchange="updateBatchCheckQty()">
-                        <p style="font-size:12px;color:#92400e;margin-top:5px;" id="suggested-sample-text"></p>
-                    </div>
-                    <div style="flex:1;">
-                        <label style="margin-bottom:5px;display:block;font-weight:600;">Remaining in Batch:</label>
-                        <div style="font-size:24px;color:#059669;font-weight:700;" id="remaining-display">-</div>
-                    </div>
-                </div>
-                <p style="font-size:12px;color:#92400e;margin-top:10px;border-top:1px solid #fbbf24;padding-top:10px;">
-                    <strong>Note:</strong> All selected checks will be performed on the <strong>same items</strong>.
+                <h4 style="color:#92400e;margin-bottom:8px;">📦 Inspection Progress</h4>
+                <p style="font-size:13px;color:#92400e;" id="suggested-sample-text"></p>
+                <p style="font-size:12px;color:#92400e;margin-top:6px;">
+                    Each check has its own quantity field below. Enter how many items you are inspecting for each check today.
                 </p>
+                <!-- hidden field kept for compat — will hold max across checks -->
+                <input type="hidden" id="batch-check-qty" value="0">
+                <span id="remaining-display" style="display:none;"></span>
             </div>
 
             <div class="progress-bar">
@@ -1103,12 +1094,16 @@ async function checkExistingSchedule() {
 
         if (data.exists) {
             currentSchedule.existingData      = data;
-            currentSchedule.checksCompleted   = data.samplesInspected || 0;
+            // NOTE: checksCompleted is now computed per-check in proceedToInspection()
+            // Here we just store station-level data for display + per-check details
+            currentSchedule.stationSamplesInspected = data.samplesInspected || 0;
             currentSchedule.totalChecksNeeded = data.sampleSize || data.batchQty;
             currentSchedule.sampleSize        = data.sampleSize || 0;
             currentSchedule.inspectionLevel   = data.inspectionLevel || '';
+            // Reset checksCompleted — will be set per-check when proceeding
+            currentSchedule.checksCompleted   = 0;
 
-            // Store per-check progress
+            // Store per-check progress keyed by station|checkId
             if (data.checkDetails) {
                 data.checkDetails.forEach(cd => {
                     currentSchedule.checkProgressData[station + '|' + cd.checkId] = cd;
@@ -1118,15 +1113,27 @@ async function checkExistingSchedule() {
             // Re-render check list with updated status badges
             updateStationChecks();
 
+            // Build check-level summary for the alert
+            let checkRows = '';
+            if (data.checkDetails && data.checkDetails.length > 0) {
+                checkRows = data.checkDetails.map(cd => {
+                    const pct = cd.sampleSize > 0 ? Math.round(cd.samplesInspected/cd.sampleSize*100) : 0;
+                    const cls = cd.status === 'Complete' ? 'color:#10b981;' : 'color:#f59e0b;';
+                    return `<span style="display:inline-block;background:#f3f4f6;border-radius:6px;padding:3px 8px;margin:2px;font-size:13px;">
+                        <strong>${cd.checkId}</strong>: <span style="${cls}">${cd.samplesInspected}/${cd.sampleSize} (${pct}%) — ${cd.status}</span>
+                    </span>`;
+                }).join('');
+            }
+
             alertDiv.className = 'alert alert-info';
             alertDiv.style.display = 'block';
             alertDiv.innerHTML = `
-                <h4 style="margin-bottom:10px;">📋 Station Progress Found!</h4>
-                <p><strong>Station:</strong> ${data.station} &nbsp;|&nbsp;
-                   <strong>Inspected:</strong> ${data.samplesInspected} / ${data.sampleSize} &nbsp;|&nbsp;
-                   <strong>Remaining:</strong> ${data.remainingSamples}</p>
-                <p style="margin-top:8px;color:#1e40af;font-weight:600;">
-                    ✓ You can continue inspecting. Choose which check(s) to do now.
+                <h4 style="margin-bottom:8px;">📋 Station Progress Found!</h4>
+                <p style="margin-bottom:8px;"><strong>Station:</strong> ${data.station} &nbsp;|&nbsp;
+                   <strong>Station total:</strong> ${data.samplesInspected} / ${data.sampleSize} samples inspected</p>
+                ${checkRows ? `<div style="margin-bottom:8px;">${checkRows}</div>` : ''}
+                <p style="color:#1e40af;font-weight:600;">
+                    ✓ Select which check(s) to do now. Each check tracks its own progress independently.
                 </p>`;
 
             if (data.inspectionLevel)
@@ -1203,6 +1210,22 @@ function proceedToInspection() {
     if (!currentSchedule.totalChecksNeeded)
         currentSchedule.totalChecksNeeded = currentSchedule.sampleSize;
 
+    // ── Per-check previouslyCompleted ────────────────────────
+    // Each selected check independently tracks how many samples it has done.
+    // checksCompleted is no longer a single station-level number — it is per-check.
+    // We store it directly on each selectedCheck object so renderQualityChecks can use it.
+    currentSchedule.selectedChecks.forEach(check => {
+        const prior = currentSchedule.checkProgressData[station + '|' + check.id];
+        check.previouslyCompleted = prior ? (prior.samplesInspected || 0) : 0;
+        check.checkSampleSize     = prior ? (prior.sampleSize || currentSchedule.sampleSize) : currentSchedule.sampleSize;
+        check.checkRemaining      = check.checkSampleSize - check.previouslyCompleted;
+    });
+
+    // For the batch progress bar, show the station-level remaining
+    // (if ANY check is incomplete, the station isn't done)
+    const stationPrior = currentSchedule.stationSamplesInspected || 0;
+    currentSchedule.checksCompleted = stationPrior; // station display only
+
     renderBatchProgress();
     renderQualityChecks();
     showScreen('screen-quality-check');
@@ -1240,28 +1263,67 @@ function renderQualityChecks() {
     }
 
     currentSchedule.selectedChecks.forEach((check, index) => {
-        const aqlInfo = getAQLInfo(check.id);
-        const prior   = currentSchedule.checkProgressData[currentSchedule.station + '|' + check.id];
-        const priorInspected = prior ? prior.samplesInspected : 0;
-        const priorRemaining = prior ? prior.remainingSamples : sampleSize;
+        const aqlInfo        = getAQLInfo(check.id);
+        // Per-check prior data now stored directly on check object
+        const priorInspected = check.previouslyCompleted || 0;
+        const checkSampleSize= check.checkSampleSize || sampleSize;
+        const checkRemaining = Math.max(0, checkSampleSize - priorInspected);
+        const isCheckComplete= checkRemaining === 0;
+
+        const statusBadge = isCheckComplete
+            ? `<span style="background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">✓ Complete</span>`
+            : checkRemaining < checkSampleSize
+            ? `<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">In Progress — ${checkRemaining} remaining</span>`
+            : `<span style="background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;">Not started — ${checkRemaining} to do</span>`;
 
         const checkDiv = document.createElement('div');
-        checkDiv.className = 'check-item';
+        checkDiv.className = 'check-item' + (isCheckComplete ? ' completed' : '');
         checkDiv.id = `check-item-${index}`;
         checkDiv.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
                 <div>
                     <div class="check-id">${check.id}</div>
-                    <div style="font-size:14px;color:#333;font-weight:600;margin-top:5px;">${check.check}</div>
+                    <div style="font-size:14px;color:#333;font-weight:600;margin-top:4px;">${check.check}</div>
                 </div>
-                <div style="text-align:right;font-size:13px;">
-                    <div><strong>AQL:</strong> ${aqlInfo.category} ≤${aqlInfo.limit}%</div>
-                    ${prior ? `<div style="color:#666;">Prior: ${priorInspected}/${sampleSize} inspected</div>` : ''}
+                <div style="text-align:right;">
+                    ${statusBadge}
+                    <div style="font-size:12px;color:#666;margin-top:4px;">AQL: ${aqlInfo.category} ≤${aqlInfo.limit}%</div>
                 </div>
             </div>
+
+            <!-- Progress bar for this check -->
+            <div style="background:#e5e7eb;height:8px;border-radius:4px;margin-bottom:12px;overflow:hidden;">
+                <div style="height:100%;border-radius:4px;background:${isCheckComplete?'#10b981':'#667eea'};width:${checkSampleSize>0?Math.round(priorInspected/checkSampleSize*100):0}%;transition:width 0.3s;"></div>
+            </div>
+            <div style="font-size:12px;color:#666;margin-bottom:12px;">${priorInspected} of ${checkSampleSize} samples done previously</div>
+
             <div class="check-spec">${check.spec}</div>
 
-            <div id="aql-live-${index}" class="aql-info-box" style="display:none;"></div>
+            <!-- Per-check qty input -->
+            ${isCheckComplete
+                ? `<div style="background:#d1fae5;padding:10px 14px;border-radius:8px;margin-top:10px;color:#065f46;font-weight:600;">
+                       ✅ This check is complete. You can still add more results if needed.
+                       <button onclick="reopenCheck(${index})" style="margin-left:10px;padding:4px 12px;background:#10b981;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Add More</button>
+                   </div>`
+                : `<div style="background:#f0f4ff;padding:12px;border-radius:8px;margin-top:10px;border:1px solid #667eea;">
+                       <label style="font-weight:700;color:#1e40af;display:block;margin-bottom:8px;">
+                           How many items for ${check.id} today?
+                           <span style="font-weight:400;font-size:12px;color:#6b7280;">(remaining: ${checkRemaining})</span>
+                       </label>
+                       <div style="display:flex;gap:10px;align-items:center;">
+                           <input type="number" id="check-qty-${index}" min="1" max="${checkRemaining}"
+                               value="${checkRemaining}"
+                               style="flex:1;padding:10px;border:2px solid #667eea;border-radius:8px;font-size:16px;font-weight:700;"
+                               onchange="updateCheckQty(${index})">
+                           <div>
+                               <div style="font-size:22px;font-weight:800;color:#10b981;" id="check-remaining-display-${index}">${checkRemaining}</div>
+                               <div style="font-size:11px;color:#666;">remaining after</div>
+                           </div>
+                       </div>
+                   </div>`
+            }
+
+            <div id="aql-live-${index}" class="aql-info-box" style="display:none;margin-top:10px;"></div>
 
             <div id="results-${index}" style="display:none;margin-top:15px;">
                 <div style="background:#f0f4ff;padding:12px;border-radius:8px;margin:10px 0;border:1px solid #667eea;">
@@ -1283,7 +1345,7 @@ function renderQualityChecks() {
                     </div>
                     <p style="font-size:11px;color:#6b7280;margin-top:8px;">💡 Tip: Hold Shift and click two items to select range</p>
                 </div>
-                <label>Mark Results for ${check.id} (Click or Shift+Click for range):</label>
+                <label style="font-weight:600;margin-bottom:8px;display:block;">Mark Results for ${check.id}:</label>
                 <div class="result-buttons" id="result-buttons-${index}"></div>
             </div>
 
@@ -1293,52 +1355,96 @@ function renderQualityChecks() {
         container.appendChild(checkDiv);
 
         currentInspection.checkResults.push({
-            checkData: check, checkedQty: 0, results: [], failedItems: []
+            checkData: check, checkedQty: 0,
+            previouslyCompleted: priorInspected,
+            results: [], failedItems: []
         });
+
+        // Auto-expand non-complete checks with their remaining qty
+        if (!isCheckComplete && checkRemaining > 0) {
+            // Trigger qty update to show buttons immediately
+            setTimeout(() => { updateCheckQty(index); }, 50);
+        }
     });
 
     updateProgress();
 }
 
-function updateBatchCheckQty() {
-    const qty        = parseInt(document.getElementById('batch-check-qty').value) || 0;
-    const maxAllowed = currentSchedule.totalChecksNeeded - currentSchedule.checksCompleted;
+// Per-check qty update — called when inspector changes qty for a specific check
+function updateCheckQty(index) {
+    const check      = currentSchedule.selectedChecks[index];
+    const qtyInput   = document.getElementById(`check-qty-${index}`);
+    if (!qtyInput) return;
+    const qty        = parseInt(qtyInput.value) || 0;
+    const maxAllowed = check.checkRemaining || 0;
 
-    if (qty > maxAllowed) {
-        alert(`You can only check up to ${maxAllowed} items (remaining in batch)`);
-        document.getElementById('batch-check-qty').value = maxAllowed;
+    if (qty > maxAllowed && maxAllowed > 0) {
+        alert(`Maximum for ${check.id} is ${maxAllowed} (remaining samples)`);
+        qtyInput.value = maxAllowed;
         return;
     }
+    if (qty < 1) { qtyInput.value = 1; return; }
 
-    document.getElementById('remaining-display').textContent = Math.max(0, maxAllowed - qty);
+    // Update remaining display
+    const remainDisp = document.getElementById(`check-remaining-display-${index}`);
+    if (remainDisp) remainDisp.textContent = Math.max(0, maxAllowed - qty);
 
-    if (qty > 0) {
-        currentInspection.checkResults.forEach((result, index) => {
-            result.checkedQty = qty;
-            const buttonsDiv = document.getElementById(`result-buttons-${index}`);
-            document.getElementById(`results-${index}`).style.display = 'block';
-            buttonsDiv.innerHTML = '';
+    const result = currentInspection.checkResults[index];
+    if (!result) return;
+    result.checkedQty = qty;
 
-            for (let i = 0; i < qty; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'result-btn';
-                btn.textContent = i + 1;
-                btn.onclick = function(e) { toggleResult(index, i, e.shiftKey); };
-                buttonsDiv.appendChild(btn);
-            }
+    const buttonsDiv = document.getElementById(`result-buttons-${index}`);
+    document.getElementById(`results-${index}`).style.display = 'block';
+    buttonsDiv.innerHTML = '';
 
-            result.results = new Array(qty).fill('pending');
-            lastClickedButton[index] = null;
-            document.getElementById(`range-from-${index}`).max = qty;
-            document.getElementById(`range-to-${index}`).max   = qty;
-        });
-    } else {
-        currentInspection.checkResults.forEach((_, index) => {
-            document.getElementById(`results-${index}`).style.display = 'none';
-        });
+    for (let i = 0; i < qty; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'result-btn';
+        btn.textContent = i + 1;
+        btn.onclick = function(e) { toggleResult(index, i, e.shiftKey); };
+        buttonsDiv.appendChild(btn);
     }
+
+    result.results = new Array(qty).fill('pending');
+    lastClickedButton[index] = null;
+    const rf = document.getElementById(`range-from-${index}`);
+    const rt = document.getElementById(`range-to-${index}`);
+    if (rf) rf.max = qty;
+    if (rt) rt.max = qty;
+
+    // Update the hidden batch-check-qty to max across all checks (for compat)
+    const maxQty = Math.max(...currentInspection.checkResults.map(r => r.checkedQty || 0));
+    document.getElementById('batch-check-qty').value = maxQty;
+
     updateProgress();
 }
+
+// Allow adding more results to a completed check
+function reopenCheck(index) {
+    const check   = currentSchedule.selectedChecks[index];
+    const checkDiv= document.getElementById(`check-item-${index}`);
+    // Replace the "complete" message with a qty input
+    const sampleSize = check.checkSampleSize || currentSchedule.sampleSize;
+    const addDiv = checkDiv.querySelector('[style*="d1fae5"]');
+    if (addDiv) {
+        addDiv.outerHTML = `<div style="background:#f0f4ff;padding:12px;border-radius:8px;margin-top:10px;border:1px solid #667eea;">
+            <label style="font-weight:700;color:#1e40af;display:block;margin-bottom:8px;">
+                Add more results for ${check.id}:
+                <span style="font-weight:400;font-size:12px;color:#6b7280;">(previously: ${check.previouslyCompleted}/${sampleSize})</span>
+            </label>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <input type="number" id="check-qty-${index}" min="1" value="${sampleSize}"
+                    style="flex:1;padding:10px;border:2px solid #667eea;border-radius:8px;font-size:16px;font-weight:700;"
+                    onchange="updateCheckQty(${index})">
+            </div>
+        </div>`;
+        check.checkRemaining = sampleSize; // allow re-doing all samples
+        setTimeout(() => updateCheckQty(index), 50);
+    }
+}
+
+// updateBatchCheckQty kept as no-op for backwards compat
+function updateBatchCheckQty() {}
 
 function toggleResult(checkIndex, itemIndex, shiftKey) {
     const btn = document.getElementById(`result-buttons-${checkIndex}`).children[itemIndex];
@@ -1502,25 +1608,30 @@ async function submitInspection() {
     submitBtn.disabled  = true;
     submitBtn.textContent = '⏳ Submitting...';
 
-    const totalCheckedToday = parseInt(document.getElementById('batch-check-qty').value) || 0;
-
-    // Collect fail details
+    // Collect fail details per check
     currentInspection.checkResults.forEach((result, checkIndex) => {
         const failedItems = [];
         result.results.forEach((res, itemIdx) => {
             if (res === 'fail') {
-                const descEl  = document.getElementById(`fail-desc-${checkIndex}-${itemIdx}`);
-                const prevEl  = document.getElementById(`photo-preview-${checkIndex}-${itemIdx}`);
-                const photo   = prevEl && prevEl.src && prevEl.src.length > 50 ? prevEl.src : null;
+                const descEl = document.getElementById(`fail-desc-${checkIndex}-${itemIdx}`);
+                const prevEl = document.getElementById(`photo-preview-${checkIndex}-${itemIdx}`);
+                const photo  = prevEl && prevEl.src && prevEl.src.length > 50 ? prevEl.src : null;
                 failedItems.push({
-                    itemNumber: itemIdx + 1,
+                    itemNumber:  itemIdx + 1,
                     description: descEl ? descEl.value : '',
-                    photo: photo
+                    photo:       photo
                 });
             }
         });
         result.failedItems = failedItems;
     });
+
+    // Total checked today = sum across all checks (use max if checks are on same items)
+    // Actually use the max since multiple checks cover same physical items
+    const totalCheckedToday = Math.max(
+        ...currentInspection.checkResults.map(r => r.checkedQty || 0), 0
+    );
+    document.getElementById('batch-check-qty').value = totalCheckedToday;
 
     const payload = {
         scheduleNo:          currentSchedule.scheduleNo,
@@ -1532,22 +1643,20 @@ async function submitInspection() {
         station:             currentSchedule.station,
         substation:          currentSchedule.substation,
         inspectionLevel:     currentSchedule.inspectionLevel || '',
-        previouslyCompleted: currentSchedule.checksCompleted,
+        previouslyCompleted: currentSchedule.stationSamplesInspected || 0,
         checkedToday:        totalCheckedToday,
         checks: currentInspection.checkResults.map(r => ({
-            id:           r.checkData.id,
-            check:        r.checkData.check,
-            specification:r.checkData.spec,
-            checkedQty:   r.checkedQty,
-            checkedToday: r.checkedQty,
-            pass:         r.results.filter(x => x === 'pass').length,
-            fail:         r.results.filter(x => x === 'fail').length,
-            results:      r.results,
-            failedItems:  r.failedItems || [],
-            previouslyCompleted: (() => {
-                const prior = currentSchedule.checkProgressData[currentSchedule.station + '|' + r.checkData.id];
-                return prior ? (prior.samplesInspected || 0) : 0;
-            })()
+            id:                  r.checkData.id,
+            check:               r.checkData.check,
+            specification:       r.checkData.spec,
+            checkedQty:          r.checkedQty || 0,
+            checkedToday:        r.checkedQty || 0,
+            pass:                r.results.filter(x => x === 'pass').length,
+            fail:                r.results.filter(x => x === 'fail').length,
+            results:             r.results,
+            failedItems:         r.failedItems || [],
+            // Per-check: how many were done before this session for THIS specific check
+            previouslyCompleted: r.previouslyCompleted || 0
         }))
     };
 
