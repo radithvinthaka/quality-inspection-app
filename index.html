@@ -735,39 +735,82 @@ function calcSampleSize(batchSize, level) {
 }
 
 // Station checks definition
+// mode: "LINKED"      → checks done together on the SAME cables in one session (e.g. Inner Cutting)
+// mode: "INDEPENDENT" → each check is a separate inspection on DIFFERENT cables; select ONE at a time
 const stationChecks = {
-    "INNER CUTTING": [
-        {id:"CMU/IC/001",check:"(R) Inner Wire Rope Cutting",spec:"Correct wire rope, without sharp edges & Actual length mention as per the Document"},
-        {id:"CMU/IC/002",check:"(M) Inner Wire Rope Bumping",spec:"Properly Bumping"}
-    ],
-    "OUTER CUTTING": [
-        {id:"CMU/OC/001",check:"(R) Outer Casing Cutting",spec:"Correct outer casing, & Actual length mention as per the Document without Damage"}
-    ],
-    "SLEEVE CUTTING": [
-        {id:"CMU/SC/001",check:"(R) PVC Sleeve Cutting",spec:"Correct Sleeve, required length, mention as per the Document"}
-    ],
-    "GLUING": [
-        {id:"CMU/GL/001",check:"(R) PVC Sleeve Pasting",spec:"Properly pasted with correct measurement mention as per the Process Document"}
-    ],
-    "HEAT EMBORSING": [
-        {id:"CMU/HE/001",check:"(R) Print batch code according to month",spec:"Properly print part number, year & Date on PVC sleeve"}
-    ],
-    "SWAGING": [
-        {id:"CMU/SW/001",check:"(R) END fitting Fixing",spec:"Fitted Required end fitting mention as per the process Document without Damage, Defect or Deformations."},
-        {id:"CMU/SW/002",check:"(R) END fitting Swaging",spec:"END fitting are properly crimped without any damage, defect or deformations."}
-    ],
-    "ASSEMBLY": [
-        {id:"CMU/AB/001",check:"(R) Assembling cable",spec:"Insert inner cable & parts Without Damage, Defect or Deformation mention as per the process Document"},
-        {id:"CMU/AB/002",check:"(C) Free Length Cutting",spec:"Cutting Specified Specifications mention as per the Process Document & Cutting cable assembly straight."}
-    ],
-    "MANUAL BUMPING": [
-        {id:"CMU/MB/001",check:"(M) Bumping the Cable",spec:"Bumping On required Side, Cable without Damage."}
-    ],
-    "DIE CASTING": [
-        {id:"CMU/DC/001",check:"(C) Die casting the cable",spec:"Die Cast without damage, defect or deformation & using correct die type."},
-        {id:"CMU/DC/002",check:"(R) Free travel Length verification",spec:"Recommended free travel length with tolerance mention as per the process Document."}
-    ]
+    "INNER CUTTING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/IC/001",check:"(R) Inner Wire Rope Cutting",spec:"Correct wire rope, without sharp edges & Actual length mention as per the Document"},
+            {id:"CMU/IC/002",check:"(M) Inner Wire Rope Bumping",spec:"Properly Bumping"}
+        ]
+    },
+    "OUTER CUTTING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/OC/001",check:"(R) Outer Casing Cutting",spec:"Correct outer casing, & Actual length mention as per the Document without Damage"}
+        ]
+    },
+    "SLEEVE CUTTING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/SC/001",check:"(R) PVC Sleeve Cutting",spec:"Correct Sleeve, required length, mention as per the Document"}
+        ]
+    },
+    "GLUING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/GL/001",check:"(R) PVC Sleeve Pasting",spec:"Properly pasted with correct measurement mention as per the Process Document"}
+        ]
+    },
+    "HEAT EMBORSING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/HE/001",check:"(R) Print batch code according to month",spec:"Properly print part number, year & Date on PVC sleeve"}
+        ]
+    },
+    "SWAGING": {
+        mode: "INDEPENDENT",
+        checks: [
+            {id:"CMU/SW/001",check:"(R) END fitting Fixing",spec:"Fitted Required end fitting mention as per the process Document without Damage, Defect or Deformations."},
+            {id:"CMU/SW/002",check:"(R) END fitting Swaging",spec:"END fitting are properly crimped without any damage, defect or deformations."}
+        ]
+    },
+    "ASSEMBLY": {
+        mode: "INDEPENDENT",
+        checks: [
+            {id:"CMU/AB/001",check:"(R) Assembling cable",spec:"Insert inner cable & parts Without Damage, Defect or Deformation mention as per the process Document"},
+            {id:"CMU/AB/002",check:"(C) Free Length Cutting",spec:"Cutting Specified Specifications mention as per the Process Document & Cutting cable assembly straight."}
+        ]
+    },
+    "MANUAL BUMPING": {
+        mode: "LINKED",
+        checks: [
+            {id:"CMU/MB/001",check:"(M) Bumping the Cable",spec:"Bumping On required Side, Cable without Damage."}
+        ]
+    },
+    "DIE CASTING": {
+        mode: "INDEPENDENT",
+        checks: [
+            {id:"CMU/DC/001",check:"(C) Die casting the cable",spec:"Die Cast without damage, defect or deformation & using correct die type."},
+            {id:"CMU/DC/002",check:"(R) Free travel Length verification",spec:"Recommended free travel length with tolerance mention as per the process Document."}
+        ]
+    }
 };
+
+// Helper: get the flat checks array for a station
+function getStationChecks(station) {
+    const s = stationChecks[station];
+    if (!s) return [];
+    return s.checks || s; // backwards compat
+}
+
+// Helper: get station mode
+function getStationMode(station) {
+    const s = stationChecks[station];
+    if (!s) return 'LINKED';
+    return s.mode || 'LINKED';
+}
 
 // ── STATE ──────────────────────────────────────────────────
 let currentSchedule = {
@@ -1026,49 +1069,88 @@ function updateSampleSize() {
 
 // ── STATION CHECKS ─────────────────────────────────────────
 function updateStationChecks() {
-    const station = document.getElementById('station').value;
+    const station   = document.getElementById('station').value;
     const container = document.getElementById('check-codes');
     container.innerHTML = '';
     if (!station || !stationChecks[station]) return;
 
-    stationChecks[station].forEach(check => {
-        // Look up if this check has prior progress
+    const mode   = getStationMode(station);
+    const checks = getStationChecks(station);
+
+    // Show mode banner
+    if (mode === 'INDEPENDENT') {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#92400e;';
+        banner.innerHTML = `<strong>⚠️ Independent checks</strong> — each check is done on a different set of cables. Select <strong>one check per inspection session</strong>.`;
+        container.appendChild(banner);
+    } else if (checks.length > 1) {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#ede9fe;border:1px solid #8b5cf6;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#5b21b6;';
+        banner.innerHTML = `<strong>✓ Linked checks</strong> — both checks are done on the same cables in one session. Tick all that apply.`;
+        container.appendChild(banner);
+    }
+
+    checks.forEach((check, idx) => {
         const progressKey = station + '|' + check.id;
         const prior = currentSchedule.checkProgressData[progressKey];
-        let badgeHtml = '';
-        let badgeCls  = 'csb-new';
-        let badgeTxt  = 'New';
+        let badgeCls = 'csb-new', badgeTxt = 'New';
         if (prior) {
             if (prior.status === 'Complete') {
                 badgeCls = 'csb-complete'; badgeTxt = 'Complete';
             } else {
-                badgeCls = 'csb-partial';
                 const pct = prior.sampleSize > 0 ? Math.round(prior.samplesInspected/prior.sampleSize*100) : 0;
-                badgeTxt = `In Progress ${pct}%`;
+                badgeCls = 'csb-partial'; badgeTxt = `In Progress ${pct}%`;
             }
         }
-        badgeHtml = `<span class="check-status-badge ${badgeCls}">${badgeTxt}</span>`;
-
-        const aqlInfo = AQL_MAP[check.id] || { category: 'Random', limit: 6.5 };
+        const badgeHtml = `<span class="check-status-badge ${badgeCls}">${badgeTxt}</span>`;
+        const aqlInfo   = AQL_MAP[check.id] || { category: 'Random', limit: 6.5 };
 
         const div = document.createElement('div');
         div.className = 'checkbox-item';
-        div.innerHTML = `
-            <input type="checkbox" id="check-${check.id}" value="${check.id}">
-            <label for="check-${check.id}" style="margin:0;cursor:pointer;flex:1;">
-                ${badgeHtml}
-                <strong>${check.id}</strong> — ${check.check}
-                <span style="margin-left:8px;font-size:12px;color:#666;">
-                    AQL: <strong>${aqlInfo.category}</strong> (≤${aqlInfo.limit}%)
-                </span>
-            </label>`;
-        div.onclick = function(e) {
-            if (e.target.tagName !== 'INPUT') {
-                const cb = div.querySelector('input');
-                cb.checked = !cb.checked;
-            }
-            div.classList.toggle('checked', div.querySelector('input').checked);
-        };
+
+        if (mode === 'INDEPENDENT') {
+            // Radio button — only one selectable at a time
+            div.innerHTML = `
+                <input type="radio" name="independent-check" id="check-${check.id}" value="${check.id}">
+                <label for="check-${check.id}" style="margin:0;cursor:pointer;flex:1;">
+                    ${badgeHtml}
+                    <strong>${check.id}</strong> — ${check.check}
+                    <span style="margin-left:8px;font-size:12px;color:#666;">
+                        AQL: <strong>${aqlInfo.category}</strong> (≤${aqlInfo.limit}%)
+                        ${prior && prior.samplesInspected > 0 ? `· ${prior.samplesInspected}/${prior.sampleSize} done` : ''}
+                    </span>
+                </label>`;
+            div.onclick = function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    const rb = div.querySelector('input');
+                    rb.checked = true;
+                    rb.dispatchEvent(new Event('change'));
+                }
+            };
+            div.querySelector('input').addEventListener('change', function() {
+                // Deselect all other radio items visually
+                container.querySelectorAll('.checkbox-item').forEach(d => d.classList.remove('checked'));
+                div.classList.add('checked');
+            });
+        } else {
+            // Checkbox — multiple selectable
+            div.innerHTML = `
+                <input type="checkbox" id="check-${check.id}" value="${check.id}">
+                <label for="check-${check.id}" style="margin:0;cursor:pointer;flex:1;">
+                    ${badgeHtml}
+                    <strong>${check.id}</strong> — ${check.check}
+                    <span style="margin-left:8px;font-size:12px;color:#666;">
+                        AQL: <strong>${aqlInfo.category}</strong> (≤${aqlInfo.limit}%)
+                    </span>
+                </label>`;
+            div.onclick = function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    const cb = div.querySelector('input');
+                    cb.checked = !cb.checked;
+                }
+                div.classList.toggle('checked', div.querySelector('input').checked);
+            };
+        }
         container.appendChild(div);
     });
 }
@@ -1180,9 +1262,18 @@ function proceedToInspection() {
         return;
     }
 
-    const checked = document.querySelectorAll('#check-codes input[type="checkbox"]:checked');
-    if (checked.length === 0) {
-        alert('Please select at least one check code');
+    // Collect selected checks — checkboxes for LINKED, radio for INDEPENDENT
+    const mode = getStationMode(station);
+    let checkedInputs;
+    if (mode === 'INDEPENDENT') {
+        checkedInputs = document.querySelectorAll('#check-codes input[type="radio"]:checked');
+    } else {
+        checkedInputs = document.querySelectorAll('#check-codes input[type="checkbox"]:checked');
+    }
+    if (checkedInputs.length === 0) {
+        alert(mode === 'INDEPENDENT'
+            ? 'Please select which check you are doing now.'
+            : 'Please select at least one check code');
         return;
     }
 
@@ -1199,32 +1290,36 @@ function proceedToInspection() {
     currentSchedule.substation    = substation;
     currentSchedule.operatorName  = operatorName || 'N/A';
     currentSchedule.inspectorName = inspectorName;
+    currentSchedule.stationMode   = mode;
     currentSchedule.selectedChecks= [];
 
-    checked.forEach(cb => {
-        const checkId  = cb.value;
-        const checkData= stationChecks[station].find(c => c.id === checkId);
-        currentSchedule.selectedChecks.push(checkData);
+    checkedInputs.forEach(cb => {
+        const checkData = getStationChecks(station).find(c => c.id === cb.value);
+        if (checkData) currentSchedule.selectedChecks.push(checkData);
     });
 
     if (!currentSchedule.totalChecksNeeded)
         currentSchedule.totalChecksNeeded = currentSchedule.sampleSize;
 
-    // ── Per-check previouslyCompleted ────────────────────────
-    // Each selected check independently tracks how many samples it has done.
-    // checksCompleted is no longer a single station-level number — it is per-check.
-    // We store it directly on each selectedCheck object so renderQualityChecks can use it.
+    // ── Per-check progress ────────────────────────────────────
+    // For INDEPENDENT: each check has its own full sample — completely separate from other checks.
+    // For LINKED: checks share the same physical cables so same sample applies.
     currentSchedule.selectedChecks.forEach(check => {
         const prior = currentSchedule.checkProgressData[station + '|' + check.id];
         check.previouslyCompleted = prior ? (prior.samplesInspected || 0) : 0;
-        check.checkSampleSize     = prior ? (prior.sampleSize || currentSchedule.sampleSize) : currentSchedule.sampleSize;
-        check.checkRemaining      = check.checkSampleSize - check.previouslyCompleted;
+        check.checkSampleSize     = currentSchedule.sampleSize; // each check always gets the full sample
+        check.checkRemaining      = Math.max(0, check.checkSampleSize - check.previouslyCompleted);
     });
 
-    // For the batch progress bar, show the station-level remaining
-    // (if ANY check is incomplete, the station isn't done)
-    const stationPrior = currentSchedule.stationSamplesInspected || 0;
-    currentSchedule.checksCompleted = stationPrior; // station display only
+    // checksCompleted for the progress banner:
+    // INDEPENDENT → based on this specific check's own prior progress
+    // LINKED      → station-level
+    if (mode === 'INDEPENDENT') {
+        const thisCheck = currentSchedule.selectedChecks[0];
+        currentSchedule.checksCompleted = thisCheck ? thisCheck.previouslyCompleted : 0;
+    } else {
+        currentSchedule.checksCompleted = currentSchedule.stationSamplesInspected || 0;
+    }
 
     renderBatchProgress();
     renderQualityChecks();
@@ -1233,13 +1328,22 @@ function proceedToInspection() {
 
 function renderBatchProgress() {
     const sampleSize = currentSchedule.sampleSize || currentSchedule.totalChecksNeeded;
-    const remaining  = sampleSize - currentSchedule.checksCompleted;
+    const mode       = currentSchedule.stationMode || 'LINKED';
+    const prior      = currentSchedule.checksCompleted;
+    const remaining  = Math.max(0, sampleSize - prior);
+
+    // For INDEPENDENT, show which check is being done
+    const checkLabel = mode === 'INDEPENDENT' && currentSchedule.selectedChecks.length > 0
+        ? ` <span style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;">${currentSchedule.selectedChecks[0].id}</span>`
+        : '';
+
     document.getElementById('batch-progress-info').innerHTML = `
-        <h4>Schedule: ${currentSchedule.scheduleNo}</h4>
+        <h4>Schedule: ${currentSchedule.scheduleNo}${checkLabel}</h4>
         <div class="summary-item"><strong>Batch Qty:</strong><span>${currentSchedule.batchQty}</span></div>
-        <div class="summary-item"><strong>Sample Size (Inspect):</strong><span style="color:#667eea;font-weight:600;">${sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span></div>
-        <div class="summary-item"><strong>Previously Inspected:</strong><span style="color:#10b981;font-weight:600;">${currentSchedule.checksCompleted}</span></div>
-        <div class="summary-item"><strong>Remaining Samples:</strong><span style="color:#f59e0b;font-weight:600;">${remaining}</span></div>`;
+        <div class="summary-item"><strong>Sample Size per Check:</strong><span style="color:#667eea;font-weight:600;">${sampleSize}${currentSchedule.sampleCodeLetter ? ' (Code ' + currentSchedule.sampleCodeLetter + ')' : ''}</span></div>
+        <div class="summary-item"><strong>Previously Inspected:</strong><span style="color:#10b981;font-weight:600;">${prior}</span></div>
+        <div class="summary-item"><strong>Remaining:</strong><span style="color:#f59e0b;font-weight:600;">${remaining}</span></div>
+        ${mode === 'INDEPENDENT' ? `<div style="font-size:12px;color:#92400e;background:#fef3c7;padding:6px 10px;border-radius:6px;margin-top:8px;">⚠️ Independent check — these are separate cables from the other check at this station</div>` : ''}`;
 }
 
 // ── QUALITY CHECK RENDER ───────────────────────────────────
@@ -1643,6 +1747,7 @@ async function submitInspection() {
         station:             currentSchedule.station,
         substation:          currentSchedule.substation,
         inspectionLevel:     currentSchedule.inspectionLevel || '',
+        stationMode:         currentSchedule.stationMode || 'LINKED',
         previouslyCompleted: currentSchedule.stationSamplesInspected || 0,
         checkedToday:        totalCheckedToday,
         checks: currentInspection.checkResults.map(r => ({
