@@ -1406,23 +1406,26 @@ function renderQualityChecks() {
             <!-- Per-check qty input -->
             ${isCheckComplete
                 ? `<div style="background:#d1fae5;padding:10px 14px;border-radius:8px;margin-top:10px;color:#065f46;font-weight:600;">
-                       ✅ This check is complete. You can still add more results if needed.
+                       ✅ This check is complete (${priorInspected}/${checkSampleSize}).
                        <button onclick="reopenCheck(${index})" style="margin-left:10px;padding:4px 12px;background:#10b981;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Add More</button>
                    </div>`
                 : `<div style="background:#f0f4ff;padding:12px;border-radius:8px;margin-top:10px;border:1px solid #667eea;">
-                       <label style="font-weight:700;color:#1e40af;display:block;margin-bottom:8px;">
-                           How many items for ${check.id} today?
-                           <span style="font-weight:400;font-size:12px;color:#6b7280;">(${checkRemaining} remaining — you can do fewer if needed)</span>
+                       <label style="font-weight:700;color:#1e40af;display:block;margin-bottom:6px;">
+                           How many items are you inspecting for ${check.id} <u>today</u>?
                        </label>
+                       <p style="font-size:12px;color:#6b7280;margin-bottom:8px;">
+                           ${priorInspected > 0 ? `Previously done: <strong>${priorInspected}</strong>. ` : ''}
+                           Remaining: <strong>${checkRemaining}</strong>. Enter however many you are doing today (can be less).
+                       </p>
                        <div style="display:flex;gap:10px;align-items:center;">
                            <input type="number" id="check-qty-${index}" min="1" max="${checkRemaining}"
-                               value="${checkRemaining}"
+                               placeholder="e.g. ${Math.min(checkRemaining, 30)}"
                                style="flex:1;padding:10px;border:2px solid #667eea;border-radius:8px;font-size:16px;font-weight:700;"
                                oninput="updateCheckQty(${index})">
-                           <div>
-                               <div style="font-size:22px;font-weight:800;color:#10b981;" id="check-remaining-display-${index}">${checkRemaining}</div>
-                               <div style="font-size:11px;color:#666;">will remain after</div>
-                           </div>
+                           <button onclick="setFullQty(${index},${checkRemaining})"
+                               style="padding:10px 14px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap;">
+                               All ${checkRemaining}
+                           </button>
                        </div>
                    </div>`
             }
@@ -1463,15 +1466,15 @@ function renderQualityChecks() {
             previouslyCompleted: priorInspected,
             results: [], failedItems: []
         });
-
-        // Auto-expand non-complete checks with their remaining qty
-        if (!isCheckComplete && checkRemaining > 0) {
-            // Trigger qty update to show buttons immediately
-            setTimeout(() => { updateCheckQty(index); }, 50);
-        }
     });
 
     updateProgress();
+}
+
+// Quickly set qty to the full remaining amount
+function setFullQty(index, qty) {
+    const input = document.getElementById(`check-qty-${index}`);
+    if (input) { input.value = qty; updateCheckQty(index); }
 }
 
 // Per-check qty update — called when inspector changes qty for a specific check
