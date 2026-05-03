@@ -279,7 +279,6 @@
             <button class="btn btn-primary" onclick="showDashboard()">📊 Dashboard & Reports</button>
             <button class="btn btn-secondary" onclick="showDownloadControlSheet()">📥 Download Control Sheet</button>
             <button class="btn btn-secondary" onclick="viewHistory()">📋 View History</button>
-            <button class="btn btn-secondary" onclick="showSkillMatrixStandalone()">👷 Operator Skill Matrix</button>
         </div>
 
         <!-- ── Screen: Dashboard ─────────────────────────────── -->
@@ -290,10 +289,12 @@
                     <label style="margin:0;">Period:</label>
                     <select id="dashboard-period" onchange="handlePeriodChange()">
                         <option value="today">Today</option>
+                        <option value="specific">Specific Day</option>
                         <option value="week">This Week</option>
                         <option value="month" selected>This Month</option>
                         <option value="custom">Custom Range</option>
                     </select>
+                    <input type="date" id="specific-date" style="display:none;" onchange="loadDashboardData()" placeholder="Select date">
                     <input type="date" id="date-from" style="display:none;" onchange="loadDashboardData()">
                     <input type="date" id="date-to" style="display:none;" onchange="loadDashboardData()">
                     <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
@@ -1880,19 +1881,6 @@ function displaySummary(totalCheckedToday, submissionSuccess, checks) {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────
-// Open dashboard directly on the Skill Matrix tab
-function showSkillMatrixStandalone() {
-    if (!requireConfig()) return;
-    showScreen('screen-dashboard');
-    // Activate the Skills tab
-    document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.remove('active'));
-    const skillsTab = document.querySelector('.dashboard-tab[onclick*="skills"]');
-    if (skillsTab) skillsTab.classList.add('active');
-    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-    document.getElementById('dashboard-skills').classList.add('active');
-    loadSkillMatrix();
-}
-
 function showDashboard() {
     if (!requireConfig()) return;
     showScreen('screen-dashboard');
@@ -1911,21 +1899,27 @@ function showDashboardTab(tabName, event) {
 
 function handlePeriodChange() {
     const period = document.getElementById('dashboard-period').value;
+    document.getElementById('specific-date').style.display = period === 'specific' ? 'block' : 'none';
     document.getElementById('date-from').style.display = period === 'custom' ? 'block' : 'none';
     document.getElementById('date-to').style.display   = period === 'custom' ? 'block' : 'none';
-    if (period !== 'custom') loadDashboardData();
+    if (period !== 'custom' && period !== 'specific') loadDashboardData();
 }
 
 async function loadDashboardData() {
     const url = localStorage.getItem('googleSheetsUrl');
     if (!url) return;
-    const period   = document.getElementById('dashboard-period').value;
-    const dateFrom = document.getElementById('date-from').value;
-    const dateTo   = document.getElementById('date-to').value;
+    const period      = document.getElementById('dashboard-period').value;
+    const dateFrom    = document.getElementById('date-from').value;
+    const dateTo      = document.getElementById('date-to').value;
+    const specificDate = document.getElementById('specific-date').value;
     try {
         showLoading('Loading dashboard data...');
         let qUrl = `${url}?action=getDashboardData&period=${period}`;
-        if (period === 'custom' && dateFrom && dateTo) qUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
+        if (period === 'custom' && dateFrom && dateTo) {
+            qUrl += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
+        } else if (period === 'specific' && specificDate) {
+            qUrl += `&specificDate=${specificDate}`;
+        }
         const resp = await fetch(qUrl);
         const data = await resp.json();
         if (data.error) { hideLoading(); return; }
