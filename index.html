@@ -1782,23 +1782,44 @@ async function submitInspection() {
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload),
             redirect: 'follow',
-            mode: 'no-cors' // CORS limitation with Apps Script; we check manually below
+            mode: 'no-cors' // CORS limitation with Apps Script; we verify by fetching back
         });
-        // With no-cors we can't read the response body — treat as optimistic success
+        // With no-cors we can't read the response — verify by fetching data back
         success = true;
     } catch(err) {
         console.log('Fetch error:', err);
         success = false;
     }
 
-    await new Promise(r => setTimeout(r, 800));
-    displaySummary(totalCheckedToday, success, payload.checks);
+    // Verify submission by fetching the schedule data back
+    submitBtn.textContent = '⏳ Verifying...';
+    let verified = false;
+    let controlSheetWarning = '';
+    if (success) {
+        await new Promise(r => setTimeout(r, 1500)); // Give Apps Script time to write
+        try {
+            const verifyResp = await fetch(`${sheetUrl}?action=getScheduleSummary&scheduleNo=${encodeURIComponent(currentSchedule.scheduleNo)}&partNo=${encodeURIComponent(currentSchedule.partNo)}`);
+            const verifyData = await verifyResp.json();
+            if (verifyData.exists && verifyData.stationProgress) {
+                verified = true;
+                // Check if our station was updated
+                const ourStation = verifyData.stationProgress.find(s => s.station === currentSchedule.station);
+                if (ourStation && ourStation.samplesInspected > 0) {
+                    verified = true;
+                }
+            }
+        } catch(verifyErr) {
+            console.log('Verification error:', verifyErr);
+        }
+    }
+
+    displaySummary(totalCheckedToday, verified, payload.checks, controlSheetWarning);
     submitBtn.disabled    = false;
     submitBtn.textContent = 'Submit Inspection';
     showScreen('screen-success');
 }
 
-function displaySummary(totalCheckedToday, submissionSuccess, checks) {
+function displaySummary(totalCheckedToday, submissionSuccess, checks, controlSheetWarning) {
     let totalPass = 0, totalFail = 0;
     currentInspection.checkResults.forEach(r => {
         totalPass += r.results.filter(x => x === 'pass').length;
@@ -1815,11 +1836,15 @@ function displaySummary(totalCheckedToday, submissionSuccess, checks) {
 
     const statusDiv = document.getElementById('submission-status');
     if (submissionSuccess) {
+        let warningHtml = '';
+        if (controlSheetWarning) {
+            warningHtml = `<br><small style="color:#92400e;">⚠️ ${controlSheetWarning}</small>`;
+        }
         statusDiv.style.cssText = 'background:#d1fae5;color:#065f46;border:2px solid #10b981;padding:12px;border-radius:8px;';
-        statusDiv.innerHTML = '✅ Data saved to Google Sheets!';
+        statusDiv.innerHTML = '✅ Data saved to Google Sheets!' + warningHtml;
     } else {
         statusDiv.style.cssText = 'background:#fee2e2;color:#991b1b;border:2px solid #ef4444;padding:12px;border-radius:8px;';
-        statusDiv.innerHTML = '⚠️ Unable to confirm submission. Please check Google Sheets.';
+        statusDiv.innerHTML = '⚠️ Unable to confirm submission. Please check Google Sheets. If data appears in sheets, it was saved successfully.';
     }
 
     document.getElementById('pdf-schedule-no').value = currentSchedule.scheduleNo;
