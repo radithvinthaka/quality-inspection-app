@@ -43,7 +43,6 @@
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
 
-        /* Check Matrix & Quantifiable Inputs */
         .check-item { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .check-title { font-weight: 600; font-size: 15px; }
@@ -58,11 +57,6 @@
 
         .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
         
-        /* Failed Items Container */
-        .fail-section { margin-top: 15px; padding: 10px; background: #fee2e2; border-radius: 8px; border: 1px solid #f87171; }
-        .fail-item-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
-        
-        /* Dashboard Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); }
         .stat-value { font-size: 24px; font-weight: 700; margin-top: 5px; }
@@ -75,14 +69,13 @@
 <body>
     <div class="container">
         <header>
-            <h1>Quality Inspection & ISO App</h1>
+            <h1>Quality Inspection & ISO Tracking System</h1>
             <div id="connection-status" style="font-size: 13px; color: var(--success);">● System Ready</div>
         </header>
 
         <div class="nav-tabs">
             <button class="tab-btn active" onclick="switchTab('inspection')">Inspection Console</button>
             <button class="tab-btn" onclick="switchTab('dashboard')">Analytics Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('matrix')">Skill Matrix</button>
         </div>
 
         <!-- INSPECTION TAB -->
@@ -109,9 +102,13 @@
                 <div class="form-group">
                     <label>Station Name</label>
                     <select id="station-name" class="form-control" onchange="loadStationChecks()">
-                        <option value="INNER CUTTING">Inner Cutting (Quantifiable Example)</option>
-                        <option value="ASSEMBLY">Assembly Station</option>
-                        <option value="SWAGING">Swaging Station</option>
+                        <option value="INNER CUTTING">Inner Cutting</option>
+                        <option value="OUTER CASING">Outer Casing</option>
+                        <option value="SLEEVE & PRINTING">Sleeve & Printing</option>
+                        <option value="SWAGING">Swaging</option>
+                        <option value="ASSEMBLY">Assembly</option>
+                        <option value="BUMPING">Bumping</option>
+                        <option value="DIE CASTING">Die Casting</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -159,32 +156,36 @@
             </div>
             <button class="btn" onclick="loadDashboardData()">Refresh Analytics</button>
         </div>
-
-        <!-- SKILL MATRIX TAB -->
-        <div id="tab-matrix" class="card hidden">
-            <h2 style="margin-bottom: 15px; font-size: 18px;">Operator Skill Matrix</h2>
-            <table id="matrix-table">
-                <thead>
-                    <tr><th>Operator</th><th>Station</th><th>Auto Inspections</th><th>Pass Rate</th><th>Effective Rating</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <button class="btn" style="margin-top: 15px;" onclick="loadSkillMatrix()">Load Matrix</button>
-        </div>
     </div>
 
     <script>
-        // Sample station configuration mapping with ISO quantifiable checks support
         const stationChecksConfig = {
             "INNER CUTTING": [
-                { id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope length and edges", requiresValue: true },
-                { id: "CMU/IC/002", check: "(M) Inner Wire Rope Bumping", spec: "Proper bumping formation", requiresValue: false }
+                { id: "CMU/IC/001", check: "(R) Inner Wire Rope Cutting", spec: "Correct wire rope, without sharp edges & actual length", requiresValue: true },
+                { id: "CMU/IC/002", check: "(M) Inner Wire Rope Bumping", spec: "Properly Bumping", requiresValue: false }
             ],
-            "ASSEMBLY": [
-                { id: "CMU/AB/001", check: "(R) Assembling cable parts", spec: "Insert inner cable without damage", requiresValue: false }
+            "OUTER CASING": [
+                { id: "CMU/OC/001", check: "(R) Outer Casing Cutting", spec: "Correct outer casing & actual length without damage", requiresValue: true }
+            ],
+            "SLEEVE & PRINTING": [
+                { id: "CMU/SC/001", check: "(R) PVC Sleeve Cutting", spec: "Correct Sleeve, required length as per document", requiresValue: true },
+                { id: "CMU/GL/001", check: "(R) PVC Sleeve Pasting", spec: "Properly pasted with correct measurement", requiresValue: true },
+                { id: "CMU/HE/001", check: "(R) Print batch code according to month", spec: "Properly print part number, year & Date on PVC sleeve", requiresValue: false }
             ],
             "SWAGING": [
-                { id: "CMU/SW/002", check: "(R) End fitting Swaging", spec: "Properly crimped dimensions", requiresValue: true }
+                { id: "CMU/SW/001", check: "(R) END fitting Fixing", spec: "Fitted required end fitting without damage/defect", requiresValue: false },
+                { id: "CMU/SW/002", check: "(R) END fitting Swaging", spec: "Properly crimped without damage or deformation", requiresValue: true }
+            ],
+            "ASSEMBLY": [
+                { id: "CMU/AB/001", check: "(R) Assembling cable", spec: "Insert inner cable & parts without damage/deformation", requiresValue: false },
+                { id: "CMU/AB/002", check: "(C) Free Length Cutting", spec: "Cutting specified specifications straight", requiresValue: true }
+            ],
+            "BUMPING": [
+                { id: "CMU/MB/001", check: "(M) Bumping the Cable", spec: "Bumping on required side, cable without damage", requiresValue: false }
+            ],
+            "DIE CASTING": [
+                { id: "CMU/DC/001", check: "(C) Die casting the cable", spec: "Die cast without damage using correct die type", requiresValue: false },
+                { id: "CMU/DC/002", check: "(R) Free travel Length verification", spec: "Recommended free travel length with tolerance", requiresValue: true }
             ]
         };
 
@@ -201,10 +202,6 @@
                 document.getElementById('tab-dashboard').classList.remove('hidden');
                 event.target.classList.add('active');
                 loadDashboardData();
-            } else if(tabId === 'matrix') {
-                document.getElementById('tab-matrix').classList.remove('hidden');
-                event.target.classList.add('active');
-                loadSkillMatrix();
             }
         }
 
@@ -299,7 +296,6 @@
         }
 
         function handleFailItem(checkIndex, itemIndex) {
-            // Hook for tracking failure descriptions & compressed image uploads
             const resObj = currentInspection.checkResults[checkIndex];
             if(!resObj.failedItems.some(f => f.itemNumber === itemIndex + 1)) {
                 resObj.failedItems.push({ itemNumber: itemIndex + 1, description: 'Out of tolerance', photo: '' });
@@ -368,20 +364,6 @@
                     document.getElementById('dash-total').textContent = data.overall.totalInspected;
                 }
             } catch(e) { console.log('Dashboard error', e); }
-        }
-
-        async function loadSkillMatrix() {
-            const url = document.getElementById('script-url').value;
-            if(!url) return;
-            try {
-                const res = await fetch(`${url}?action=getSkillMatrix`);
-                const data = await res.json();
-                const tbody = document.querySelector('#matrix-table tbody');
-                tbody.innerHTML = '';
-                (data.skills || []).forEach(s => {
-                    tbody.innerHTML += `<tr><td>${s.inspector}</td><td>${s.station}</td><td>${s.autoInspections}</td><td>${s.autoPassRate}%</td><td><b>${s.effectiveRating}</b></td></tr>`;
-                });
-            } catch(e) { console.log('Matrix error', e); }
         }
 
         async function generatePDFReport() {
