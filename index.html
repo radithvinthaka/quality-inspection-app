@@ -121,8 +121,15 @@
                     <input type="text" id="part-no" class="form-control">
                 </div>
                 <div class="form-group">
+                    <label>Inspection Level</label>
+                    <select id="inspection-level" class="form-control" onchange="calculateAQLSampleSize()">
+                        <option value="I">Level I (Reduced)</option>
+                        <option value="II" selected>Level II (Normal)</option>
+                        <option value="III">Level III (Tightened)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Batch Quantity <span style="font-size: 11px; font-weight: normal; color: var(--primary);">(Auto-sizes samples)</span></label>
-                    <!-- Trigger auto sample size on input -->
                     <input type="number" id="batch-qty" class="form-control" oninput="calculateAQLSampleSize()">
                 </div>
                 <div class="form-group">
@@ -146,7 +153,7 @@
                     <input type="text" id="operator-name" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>Sample Size <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(ISO General Level II)</span></label>
+                    <label>Sample Size <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Auto-calculated)</span></label>
                     <input type="number" id="sample-size" class="form-control" value="0" onchange="loadStationChecks()">
                 </div>
             </div>
@@ -207,24 +214,47 @@
             alert("Configuration Saved Successfully!");
         }
 
-        // --- NEW: AQL Auto Sample Size Calculator ---
+        // --- UPDATED: AQL Auto Sample Size Calculator (ISO 2859-1 All Levels) ---
         function calculateAQLSampleSize() {
             const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
-            let autoSize = 0;
+            const level = document.getElementById('inspection-level').value; // 'I', 'II', or 'III'
             
-            // Standard ISO 2859-1 (General Inspection Level II)
-            if (batchQty >= 1 && batchQty <= 8) autoSize = 2;
-            else if (batchQty <= 15) autoSize = 3;
-            else if (batchQty <= 25) autoSize = 5;
-            else if (batchQty <= 50) autoSize = 8;
-            else if (batchQty <= 90) autoSize = 13;
-            else if (batchQty <= 150) autoSize = 20;
-            else if (batchQty <= 280) autoSize = 32;
-            else if (batchQty <= 500) autoSize = 50;
-            else if (batchQty <= 1200) autoSize = 80;
-            else if (batchQty <= 3200) autoSize = 125;
-            else if (batchQty <= 10000) autoSize = 200;
-            else if (batchQty > 10000) autoSize = 315;
+            if (batchQty < 2) {
+                document.getElementById('sample-size').value = batchQty;
+                if(batchQty > 0) loadStationChecks();
+                return;
+            }
+            
+            // Map batch size range to an index (0 to 14)
+            let sizeIndex = 0;
+            if (batchQty <= 8) sizeIndex = 0;
+            else if (batchQty <= 15) sizeIndex = 1;
+            else if (batchQty <= 25) sizeIndex = 2;
+            else if (batchQty <= 50) sizeIndex = 3;
+            else if (batchQty <= 90) sizeIndex = 4;
+            else if (batchQty <= 150) sizeIndex = 5;
+            else if (batchQty <= 280) sizeIndex = 6;
+            else if (batchQty <= 500) sizeIndex = 7;
+            else if (batchQty <= 1200) sizeIndex = 8;
+            else if (batchQty <= 3200) sizeIndex = 9;
+            else if (batchQty <= 10000) sizeIndex = 10;
+            else if (batchQty <= 35000) sizeIndex = 11;
+            else if (batchQty <= 150000) sizeIndex = 12;
+            else if (batchQty <= 500000) sizeIndex = 13;
+            else sizeIndex = 14;
+
+            // Map Code Letters to Indices (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, J=8, K=9, L=10, M=11, N=12, P=13, Q=14)
+            const levelCodeMap = {
+                'I':   [0, 0, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                'II':  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+                'III': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 14]
+            };
+            
+            // Array matching the Code Letter indices to their Sample Size equivalents
+            const sampleSizes = [2, 3, 5, 8, 13, 20, 32, 50, 80, 125, 200, 315, 500, 800, 1250];
+
+            const codeLetterIdx = levelCodeMap[level][sizeIndex];
+            const autoSize = sampleSizes[codeLetterIdx];
 
             document.getElementById('sample-size').value = autoSize;
             
@@ -320,7 +350,7 @@
             });
         }
 
-        // --- NEW: Mark All Pass/Fail Logic ---
+        // --- Quick Select Pass/Fail Logic ---
         function markAll(checkIndex, status) {
             const resObj = currentInspection.checkResults[checkIndex];
             const qty = resObj.checkedQty;
@@ -506,6 +536,7 @@
                 scheduleNo: document.getElementById('schedule-no').value,
                 partNo: document.getElementById('part-no').value,
                 batchQty: document.getElementById('batch-qty').value,
+                inspectionLevel: document.getElementById('inspection-level').options[document.getElementById('inspection-level').selectedIndex].text,
                 station: document.getElementById('station-name').value,
                 inspectorName: document.getElementById('inspector-name').value,
                 operatorName: document.getElementById('operator-name').value,
