@@ -54,6 +54,7 @@
         .quant-btn { flex: 1; padding: 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; background: var(--border-color); color: var(--text-muted); }
         .quant-btn.pass.active { background: var(--success); color: white; }
         .quant-btn.fail.active { background: var(--danger); color: white; }
+        .simple-btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; background: var(--border-color); color: var(--text-muted); }
 
         .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px; }
         
@@ -120,8 +121,9 @@
                     <input type="text" id="part-no" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>Batch Quantity</label>
-                    <input type="number" id="batch-qty" class="form-control">
+                    <label>Batch Quantity <span style="font-size: 11px; font-weight: normal; color: var(--primary);">(Auto-sizes samples)</span></label>
+                    <!-- Trigger auto sample size on input -->
+                    <input type="number" id="batch-qty" class="form-control" oninput="calculateAQLSampleSize()">
                 </div>
                 <div class="form-group">
                     <label>Station Name</label>
@@ -144,9 +146,8 @@
                     <input type="text" id="operator-name" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>Sample Size</label>
-                    <!-- Triggers reload of checks immediately when changed -->
-                    <input type="number" id="sample-size" class="form-control" value="5" onchange="loadStationChecks()">
+                    <label>Sample Size <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(ISO General Level II)</span></label>
+                    <input type="number" id="sample-size" class="form-control" value="0" onchange="loadStationChecks()">
                 </div>
             </div>
 
@@ -184,7 +185,7 @@
     </div>
 
     <script>
-        const ADMIN_PASSWORD = "admin"; // Change this if you want a different password
+        const ADMIN_PASSWORD = "admin";
 
         // Load stored URL on startup
         let globalScriptUrl = localStorage.getItem('quality_app_url') || '';
@@ -204,6 +205,31 @@
             localStorage.setItem('quality_app_url', globalScriptUrl);
             document.getElementById('settings-modal').classList.add('hidden');
             alert("Configuration Saved Successfully!");
+        }
+
+        // --- NEW: AQL Auto Sample Size Calculator ---
+        function calculateAQLSampleSize() {
+            const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
+            let autoSize = 0;
+            
+            // Standard ISO 2859-1 (General Inspection Level II)
+            if (batchQty >= 1 && batchQty <= 8) autoSize = 2;
+            else if (batchQty <= 15) autoSize = 3;
+            else if (batchQty <= 25) autoSize = 5;
+            else if (batchQty <= 50) autoSize = 8;
+            else if (batchQty <= 90) autoSize = 13;
+            else if (batchQty <= 150) autoSize = 20;
+            else if (batchQty <= 280) autoSize = 32;
+            else if (batchQty <= 500) autoSize = 50;
+            else if (batchQty <= 1200) autoSize = 80;
+            else if (batchQty <= 3200) autoSize = 125;
+            else if (batchQty <= 10000) autoSize = 200;
+            else if (batchQty > 10000) autoSize = 315;
+
+            document.getElementById('sample-size').value = autoSize;
+            
+            // Reload checks with the new size
+            if(autoSize > 0) loadStationChecks();
         }
 
         const stationChecksConfig = {
@@ -258,7 +284,7 @@
             const sampleSize = parseInt(document.getElementById('sample-size').value) || 0;
             
             if (sampleSize <= 0) {
-                container.innerHTML = '<p style="color:var(--danger)">Please enter a valid sample size greater than 0.</p>';
+                container.innerHTML = '<p style="color:var(--danger)">Please enter a batch quantity to calculate sample size.</p>';
                 return;
             }
 
@@ -280,6 +306,10 @@
                 div.innerHTML = `
                     <div class="check-header">
                         <span class="check-title">${chk.id}: ${chk.check}</span>
+                        <div>
+                            <button class="btn btn-success" style="padding: 5px 10px; font-size: 12px; margin-right:5px;" onclick="markAll(${index}, 'pass')">All Pass ✓</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="markAll(${index}, 'fail')">All Fail ✗</button>
+                        </div>
                     </div>
                     <div class="check-spec">Spec: ${chk.spec}</div>
                     <div class="result-grid" id="result-buttons-${index}" style="grid-template-columns: repeat(auto-fill, minmax(${chk.requiresValue ? '120px' : '60px'}, 1fr));"></div>
@@ -288,6 +318,30 @@
                 container.appendChild(div);
                 renderCheckInputs(index, sampleSize);
             });
+        }
+
+        // --- NEW: Mark All Pass/Fail Logic ---
+        function markAll(checkIndex, status) {
+            const resObj = currentInspection.checkResults[checkIndex];
+            const qty = resObj.checkedQty;
+            
+            for (let i = 0; i < qty; i++) {
+                if (resObj.checkData.requiresValue) {
+                    setQuantResult(checkIndex, i, status);
+                } else {
+                    resObj.results[i] = status;
+                    const btn = document.getElementById(`btn-${checkIndex}-${i}`);
+                    if (status === 'pass') {
+                        btn.style.background = 'var(--success)';
+                        btn.style.color = 'white';
+                        removeFailItem(checkIndex, i);
+                    } else {
+                        btn.style.background = 'var(--danger)';
+                        btn.style.color = 'white';
+                        addFailItem(checkIndex, i);
+                    }
+                }
+            }
         }
 
         function renderCheckInputs(index, qty) {
@@ -311,8 +365,8 @@
                 } else {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = 'quant-btn';
-                    btn.style.padding = '10px';
+                    btn.className = 'simple-btn';
+                    btn.id = `btn-${index}-${i}`;
                     btn.textContent = i + 1;
                     btn.onclick = () => toggleSimpleResult(index, i, btn);
                     buttonsDiv.appendChild(btn);
@@ -429,7 +483,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // Compress to 50% quality JPEG to prevent Apps Script timeouts
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
                         preview.src = compressedDataUrl;
                         preview.style.display = 'block';
@@ -473,7 +526,11 @@
             try {
                 await fetch(globalScriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert('Inspection Submitted Successfully!');
-                loadStationChecks(); // Reset Form
+                
+                // Clear inputs for the next entry
+                document.getElementById('batch-qty').value = '';
+                document.getElementById('sample-size').value = 0;
+                document.getElementById('checks-container').innerHTML = '';
             } catch(err) {
                 alert('Submission error: ' + err);
             } finally {
@@ -492,6 +549,8 @@
                 if(data.exists) {
                     document.getElementById('part-no').value = data.partNo;
                     document.getElementById('batch-qty').value = data.batchQty;
+                    // Trigger the auto-calculation when batch qty is loaded from server
+                    calculateAQLSampleSize();
                 }
             } catch(e) { console.log('Lookup error', e); }
         }
@@ -525,7 +584,12 @@
             } catch(e) { alert('PDF Generation failed: ' + e); }
         }
 
-        window.onload = loadStationChecks;
+        window.onload = function() {
+            // Check if settings exist, otherwise open modal immediately
+            if (!globalScriptUrl) {
+                openSettings();
+            }
+        };
     </script>
 </body>
 </html>
