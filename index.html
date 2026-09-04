@@ -16,6 +16,7 @@
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
+            --highlight: #e0e7ff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -34,8 +35,11 @@
         .hidden { display: none !important; }
 
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { padding: 10px; border-radius: 8px; }
+        .form-group.highlighted { background-color: var(--highlight); border: 1px solid #c7d2fe; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; }
+        .form-group.highlighted label { color: var(--primary); }
+        .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: white; }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
 
         .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
@@ -71,10 +75,6 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); }
         .stat-value { font-size: 24px; font-weight: 700; margin-top: 5px; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--card-bg); border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        th { background: #f8fafc; font-weight: 600; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -91,7 +91,7 @@
         <div id="settings-modal" class="hidden">
             <div class="modal-content">
                 <h3 style="margin-bottom: 15px; color: var(--primary);">Admin Settings</h3>
-                <div class="form-group">
+                <div class="form-group" style="padding:0;">
                     <label>Apps Script Web App URL</label>
                     <input type="text" id="script-url" class="form-control" style="margin-bottom:15px;">
                 </div>
@@ -120,18 +120,22 @@
                     <label>Part Number</label>
                     <input type="text" id="part-no" class="form-control">
                 </div>
-                <div class="form-group">
-                    <label>Inspection Level</label>
+
+                <!-- HIGHLIGHTED INSPECTION LEVEL SELECTION -->
+                <div class="form-group highlighted">
+                    <label>AQL Inspection Level</label>
                     <select id="inspection-level" class="form-control" onchange="calculateAQLSampleSize()">
                         <option value="I">Level I (Reduced)</option>
                         <option value="II" selected>Level II (Normal)</option>
                         <option value="III">Level III (Tightened)</option>
                     </select>
                 </div>
-                <div class="form-group">
+
+                <div class="form-group highlighted">
                     <label>Batch Quantity <span style="font-size: 11px; font-weight: normal; color: var(--primary);">(Auto-sizes samples)</span></label>
                     <input type="number" id="batch-qty" class="form-control" oninput="calculateAQLSampleSize()">
                 </div>
+                
                 <div class="form-group">
                     <label>Station Name</label>
                     <select id="station-name" class="form-control" onchange="loadStationChecks()">
@@ -154,14 +158,16 @@
                 </div>
                 <div class="form-group">
                     <label>Sample Size <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Auto-calculated)</span></label>
-                    <input type="number" id="sample-size" class="form-control" value="0" onchange="loadStationChecks()">
+                    <input type="number" id="sample-size" class="form-control" value="0" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
                 </div>
             </div>
 
             <hr style="border:0; border-top:1px solid var(--border-color); margin: 20px 0;">
 
             <div id="checks-container">
-                <!-- Dynamic Check items render here -->
+                <p style="color:var(--text-muted); text-align:center; padding: 20px;">
+                    Enter a Batch Quantity and select a Station to generate inspection checks.
+                </p>
             </div>
 
             <div style="margin-top: 20px; display: flex; gap: 10px;">
@@ -214,7 +220,7 @@
             alert("Configuration Saved Successfully!");
         }
 
-        // --- UPDATED: AQL Auto Sample Size Calculator (ISO 2859-1 All Levels) ---
+        // --- AQL Auto Sample Size Calculator (ISO 2859-1 All Levels) ---
         function calculateAQLSampleSize() {
             const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
             const level = document.getElementById('inspection-level').value; // 'I', 'II', or 'III'
@@ -243,7 +249,7 @@
             else if (batchQty <= 500000) sizeIndex = 13;
             else sizeIndex = 14;
 
-            // Map Code Letters to Indices (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, J=8, K=9, L=10, M=11, N=12, P=13, Q=14)
+            // Map Code Letters to Indices
             const levelCodeMap = {
                 'I':   [0, 0, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                 'II':  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
@@ -258,7 +264,7 @@
 
             document.getElementById('sample-size').value = autoSize;
             
-            // Reload checks with the new size
+            // Reload checks with the new size immediately
             if(autoSize > 0) loadStationChecks();
         }
 
@@ -314,7 +320,7 @@
             const sampleSize = parseInt(document.getElementById('sample-size').value) || 0;
             
             if (sampleSize <= 0) {
-                container.innerHTML = '<p style="color:var(--danger)">Please enter a batch quantity to calculate sample size.</p>';
+                container.innerHTML = '<p style="color:var(--danger); text-align:center; padding: 20px;">Please enter a batch quantity greater than 0 to calculate the sample size.</p>';
                 return;
             }
 
@@ -532,10 +538,16 @@
                 return; 
             }
 
+            const batchQtyVal = document.getElementById('batch-qty').value;
+            if(!batchQtyVal || batchQtyVal <= 0) {
+                alert("Please enter a valid Batch Quantity.");
+                return;
+            }
+
             const payload = {
                 scheduleNo: document.getElementById('schedule-no').value,
                 partNo: document.getElementById('part-no').value,
-                batchQty: document.getElementById('batch-qty').value,
+                batchQty: batchQtyVal,
                 inspectionLevel: document.getElementById('inspection-level').options[document.getElementById('inspection-level').selectedIndex].text,
                 station: document.getElementById('station-name').value,
                 inspectorName: document.getElementById('inspector-name').value,
@@ -561,7 +573,7 @@
                 // Clear inputs for the next entry
                 document.getElementById('batch-qty').value = '';
                 document.getElementById('sample-size').value = 0;
-                document.getElementById('checks-container').innerHTML = '';
+                document.getElementById('checks-container').innerHTML = '<p style="color:var(--text-muted); text-align:center; padding: 20px;">Enter a Batch Quantity and select a Station to generate inspection checks.</p>';
             } catch(err) {
                 alert('Submission error: ' + err);
             } finally {
