@@ -11,6 +11,7 @@
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --info: #3b82f6;
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #1f2937;
@@ -27,7 +28,7 @@
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card-bg); padding: 15px 25px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h1 { font-size: 22px; color: var(--primary); font-weight: 700; }
 
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .tab-btn { padding: 10px 20px; border: none; background: var(--card-bg); color: var(--text-muted); font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .tab-btn.active { background: var(--primary); color: white; }
 
@@ -41,11 +42,19 @@
         .form-group.highlighted label { color: var(--primary); }
         .form-control { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: white; }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .form-control[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
 
         .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
         .btn:hover { background: var(--primary-hover); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
+        .btn-info { background: var(--info); }
+
+        /* Progress Info Box */
+        .progress-box { background: #dbeafe; border: 1px solid #93c5fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .progress-stat { text-align: center; }
+        .progress-val { font-size: 18px; font-weight: bold; color: #1e3a8a; }
+        .progress-lbl { font-size: 12px; color: #3b82f6; font-weight: 600; text-transform: uppercase; }
 
         .check-item { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -75,6 +84,14 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); }
         .stat-value { font-size: 24px; font-weight: 700; margin-top: 5px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--card-bg); border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        th { background: #f8fafc; font-weight: 600; color: var(--text-muted); }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-progress { background: #fef3c7; color: #92400e; }
+        .badge-complete { background: #d1fae5; color: #065f46; }
     </style>
 </head>
 <body>
@@ -104,6 +121,7 @@
 
         <div class="nav-tabs">
             <button class="tab-btn active" onclick="switchTab('inspection')">Inspection Console</button>
+            <button class="tab-btn" onclick="switchTab('history')">History & Resumes</button>
             <button class="tab-btn" onclick="switchTab('dashboard')">Analytics Dashboard</button>
         </div>
 
@@ -114,14 +132,13 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>Schedule Number</label>
-                    <input type="text" id="schedule-no" class="form-control" onblur="lookupSchedule()">
+                    <input type="text" id="schedule-no" class="form-control" onblur="fetchProgress()">
                 </div>
                 <div class="form-group">
                     <label>Part Number</label>
                     <input type="text" id="part-no" class="form-control">
                 </div>
 
-                <!-- HIGHLIGHTED INSPECTION LEVEL SELECTION -->
                 <div class="form-group highlighted">
                     <label>AQL Inspection Level</label>
                     <select id="inspection-level" class="form-control" onchange="calculateAQLSampleSize()">
@@ -138,7 +155,8 @@
                 
                 <div class="form-group">
                     <label>Station Name</label>
-                    <select id="station-name" class="form-control" onchange="loadStationChecks()">
+                    <select id="station-name" class="form-control" onchange="fetchProgress()">
+                        <option value="">-- Select Station --</option>
                         <option value="INNER CUTTING">Inner Cutting</option>
                         <option value="OUTER CASING">Outer Casing</option>
                         <option value="SLEEVE & PRINTING">Sleeve & Printing</option>
@@ -157,8 +175,24 @@
                     <input type="text" id="operator-name" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>Sample Size <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Auto-calculated)</span></label>
-                    <input type="number" id="sample-size" class="form-control" value="0" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
+                    <label style="color:var(--info);">Samples to Check NOW (Editable)</label>
+                    <input type="number" id="sample-size" class="form-control" value="0" style="border: 2px solid var(--info);" onchange="loadStationChecks()">
+                </div>
+            </div>
+
+            <!-- Progress Info Box (Hidden until calculated) -->
+            <div id="progress-box" class="progress-box hidden">
+                <div class="progress-stat">
+                    <div class="progress-lbl">Total AQL Required</div>
+                    <div class="progress-val" id="lbl-total-req">0</div>
+                </div>
+                <div class="progress-stat">
+                    <div class="progress-lbl" style="color:var(--success);">Previously Completed</div>
+                    <div class="progress-val" id="lbl-prev-done" style="color:var(--success);">0</div>
+                </div>
+                <div class="progress-stat">
+                    <div class="progress-lbl" style="color:var(--warning);">Remaining Needed</div>
+                    <div class="progress-val" id="lbl-remaining" style="color:var(--warning);">0</div>
                 </div>
             </div>
 
@@ -166,13 +200,35 @@
 
             <div id="checks-container">
                 <p style="color:var(--text-muted); text-align:center; padding: 20px;">
-                    Enter a Batch Quantity and select a Station to generate inspection checks.
+                    Enter Schedule, Batch Quantity, and select a Station to begin.
                 </p>
             </div>
 
             <div style="margin-top: 20px; display: flex; gap: 10px;">
                 <button class="btn btn-success" id="submit-btn" onclick="submitInspection()">Submit Inspection</button>
-                <button class="btn" onclick="generatePDFReport()">Generate PDF Report</button>
+            </div>
+        </div>
+
+        <!-- HISTORY TAB -->
+        <div id="tab-history" class="card hidden">
+            <h2 style="margin-bottom: 15px; font-size: 18px;">Inspection History & PDF Downloads</h2>
+            <button class="btn btn-info" style="margin-bottom: 15px;" onclick="loadHistory()">Refresh History</button>
+            <div style="overflow-x: auto;">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Schedule No</th>
+                            <th>Part No</th>
+                            <th>Completed Stations</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" style="text-align:center;">Click refresh to load history...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -199,9 +255,10 @@
 
     <script>
         const ADMIN_PASSWORD = "admin";
-
-        // Load stored URL on startup
         let globalScriptUrl = localStorage.getItem('quality_app_url') || '';
+        
+        let totalAQLRequired = 0;
+        let previouslyCompleted = 0;
 
         function openSettings() {
             const pwd = prompt("Enter Admin Password to configure URL:");
@@ -220,18 +277,35 @@
             alert("Configuration Saved Successfully!");
         }
 
-        // --- AQL Auto Sample Size Calculator (ISO 2859-1 All Levels) ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.container > .card').forEach(c => c.classList.add('hidden'));
+            
+            if(tabId === 'inspection') {
+                document.getElementById('tab-inspection').classList.remove('hidden');
+                event.target.classList.add('active');
+            } else if(tabId === 'history') {
+                document.getElementById('tab-history').classList.remove('hidden');
+                event.target.classList.add('active');
+                loadHistory();
+            } else if(tabId === 'dashboard') {
+                document.getElementById('tab-dashboard').classList.remove('hidden');
+                event.target.classList.add('active');
+                loadDashboardData();
+            }
+        }
+
+        // --- AQL Auto Sample Size Calculator ---
         function calculateAQLSampleSize() {
             const batchQty = parseInt(document.getElementById('batch-qty').value) || 0;
-            const level = document.getElementById('inspection-level').value; // 'I', 'II', or 'III'
+            const level = document.getElementById('inspection-level').value; 
             
             if (batchQty < 2) {
-                document.getElementById('sample-size').value = batchQty;
-                if(batchQty > 0) loadStationChecks();
+                totalAQLRequired = batchQty;
+                fetchProgress();
                 return;
             }
             
-            // Map batch size range to an index (0 to 14)
             let sizeIndex = 0;
             if (batchQty <= 8) sizeIndex = 0;
             else if (batchQty <= 15) sizeIndex = 1;
@@ -249,23 +323,74 @@
             else if (batchQty <= 500000) sizeIndex = 13;
             else sizeIndex = 14;
 
-            // Map Code Letters to Indices
             const levelCodeMap = {
                 'I':   [0, 0, 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                 'II':  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
                 'III': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 14]
             };
             
-            // Array matching the Code Letter indices to their Sample Size equivalents
             const sampleSizes = [2, 3, 5, 8, 13, 20, 32, 50, 80, 125, 200, 315, 500, 800, 1250];
 
-            const codeLetterIdx = levelCodeMap[level][sizeIndex];
-            const autoSize = sampleSizes[codeLetterIdx];
+            totalAQLRequired = sampleSizes[levelCodeMap[level][sizeIndex]];
+            fetchProgress();
+        }
 
-            document.getElementById('sample-size').value = autoSize;
+        // --- NEW: Fetch Progress for Partial Resumes ---
+        async function fetchProgress() {
+            if(!globalScriptUrl) return;
+            const schedNo = document.getElementById('schedule-no').value;
+            const station = document.getElementById('station-name').value;
             
-            // Reload checks with the new size immediately
-            if(autoSize > 0) loadStationChecks();
+            if(!schedNo) return;
+
+            // If we only have schedule, fetch basic info (Part No, Batch)
+            if(!station) {
+                try {
+                    const res = await fetch(`${globalScriptUrl}?action=getScheduleSummary&scheduleNo=${encodeURIComponent(schedNo)}`);
+                    const data = await res.json();
+                    if(data.exists) {
+                        if(!document.getElementById('part-no').value) document.getElementById('part-no').value = data.partNo;
+                        if(!document.getElementById('batch-qty').value) {
+                            document.getElementById('batch-qty').value = data.batchQty;
+                            calculateAQLSampleSize();
+                        }
+                    }
+                } catch(e) {}
+                return;
+            }
+
+            // If we have Schedule AND Station, fetch exact progress
+            const partNo = document.getElementById('part-no').value;
+            try {
+                const res = await fetch(`${globalScriptUrl}?action=lookup&scheduleNo=${encodeURIComponent(schedNo)}&partNo=${encodeURIComponent(partNo)}&station=${encodeURIComponent(station)}`);
+                const data = await res.json();
+                
+                previouslyCompleted = 0;
+                
+                if (data.exists && data.samplesInspected) {
+                    previouslyCompleted = parseInt(data.samplesInspected) || 0;
+                }
+
+                let remaining = Math.max(0, totalAQLRequired - previouslyCompleted);
+
+                // Update UI Boxes
+                document.getElementById('progress-box').classList.remove('hidden');
+                document.getElementById('lbl-total-req').textContent = totalAQLRequired;
+                document.getElementById('lbl-prev-done').textContent = previouslyCompleted;
+                document.getElementById('lbl-remaining').textContent = remaining;
+                
+                // Set the default "Checking Now" box to whatever is remaining
+                document.getElementById('sample-size').value = remaining;
+                
+                loadStationChecks();
+                
+            } catch (e) {
+                console.log("Progress fetch error", e);
+                // If it fails, assume 0 done.
+                previouslyCompleted = 0;
+                document.getElementById('sample-size').value = totalAQLRequired;
+                loadStationChecks();
+            }
         }
 
         const stationChecksConfig = {
@@ -300,27 +425,17 @@
 
         let currentInspection = { checkResults: [] };
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.container > .card').forEach(c => c.classList.add('hidden'));
-            
-            if(tabId === 'inspection') {
-                document.getElementById('tab-inspection').classList.remove('hidden');
-                event.target.classList.add('active');
-            } else if(tabId === 'dashboard') {
-                document.getElementById('tab-dashboard').classList.remove('hidden');
-                event.target.classList.add('active');
-                loadDashboardData();
-            }
-        }
-
         function loadStationChecks() {
             const station = document.getElementById('station-name').value;
             const container = document.getElementById('checks-container');
-            const sampleSize = parseInt(document.getElementById('sample-size').value) || 0;
+            const qtyCheckingNow = parseInt(document.getElementById('sample-size').value) || 0;
             
-            if (sampleSize <= 0) {
-                container.innerHTML = '<p style="color:var(--danger); text-align:center; padding: 20px;">Please enter a batch quantity greater than 0 to calculate the sample size.</p>';
+            if (qtyCheckingNow <= 0) {
+                if(previouslyCompleted >= totalAQLRequired && totalAQLRequired > 0) {
+                    container.innerHTML = `<p style="color:var(--success); text-align:center; padding: 20px; font-weight:bold;">This station is already 100% complete! (${previouslyCompleted}/${totalAQLRequired} done)</p>`;
+                } else {
+                    container.innerHTML = '<p style="color:var(--danger); text-align:center; padding: 20px;">Please enter a valid quantity in "Samples to Check NOW".</p>';
+                }
                 return;
             }
 
@@ -331,9 +446,9 @@
             checks.forEach((chk, index) => {
                 currentInspection.checkResults.push({
                     checkData: chk,
-                    checkedQty: sampleSize,
-                    results: new Array(sampleSize).fill('pending'),
-                    quantValues: new Array(sampleSize).fill(''),
+                    checkedQty: qtyCheckingNow, // How many we are checking NOW
+                    results: new Array(qtyCheckingNow).fill('pending'),
+                    quantValues: new Array(qtyCheckingNow).fill(''),
                     failedItems: []
                 });
 
@@ -352,30 +467,24 @@
                     <div id="fail-container-${index}"></div>
                 `;
                 container.appendChild(div);
-                renderCheckInputs(index, sampleSize);
+                renderCheckInputs(index, qtyCheckingNow);
             });
         }
 
-        // --- Quick Select Pass/Fail Logic ---
         function markAll(checkIndex, status) {
             const resObj = currentInspection.checkResults[checkIndex];
-            const qty = resObj.checkedQty;
-            
-            for (let i = 0; i < qty; i++) {
+            for (let i = 0; i < resObj.checkedQty; i++) {
                 if (resObj.checkData.requiresValue) {
                     setQuantResult(checkIndex, i, status);
                 } else {
                     resObj.results[i] = status;
                     const btn = document.getElementById(`btn-${checkIndex}-${i}`);
-                    if (status === 'pass') {
-                        btn.style.background = 'var(--success)';
+                    if(btn) {
+                        btn.style.background = status === 'pass' ? 'var(--success)' : 'var(--danger)';
                         btn.style.color = 'white';
-                        removeFailItem(checkIndex, i);
-                    } else {
-                        btn.style.background = 'var(--danger)';
-                        btn.style.color = 'white';
-                        addFailItem(checkIndex, i);
                     }
+                    if(status === 'fail') addFailItem(checkIndex, i);
+                    else removeFailItem(checkIndex, i);
                 }
             }
         }
@@ -386,11 +495,14 @@
             buttonsDiv.innerHTML = '';
 
             for (let i = 0; i < qty; i++) {
+                // Determine the actual sample number by adding previously completed
+                const actualSampleNum = previouslyCompleted + i + 1;
+                
                 if (checkObj.checkData.requiresValue) {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'quant-wrapper';
                     wrapper.innerHTML = `
-                        <div style="font-size:11px;font-weight:600;margin-bottom:3px;">Item ${i+1}</div>
+                        <div style="font-size:11px;font-weight:600;margin-bottom:3px;">Sample #${actualSampleNum}</div>
                         <input type="number" step="any" class="quant-input" placeholder="Value" onchange="saveQuantValue(${index}, ${i}, this.value)">
                         <div class="quant-btn-group">
                             <button class="quant-btn pass" id="quant-pass-${index}-${i}" onclick="setQuantResult(${index}, ${i}, 'pass')">✓</button>
@@ -403,7 +515,7 @@
                     btn.type = 'button';
                     btn.className = 'simple-btn';
                     btn.id = `btn-${index}-${i}`;
-                    btn.textContent = i + 1;
+                    btn.textContent = `#${actualSampleNum}`;
                     btn.onclick = () => toggleSimpleResult(index, i, btn);
                     buttonsDiv.appendChild(btn);
                 }
@@ -421,11 +533,8 @@
             document.getElementById(`quant-pass-${checkIndex}-${itemIndex}`).classList.toggle('active', status === 'pass');
             document.getElementById(`quant-fail-${checkIndex}-${itemIndex}`).classList.toggle('active', status === 'fail');
             
-            if(status === 'fail') {
-                addFailItem(checkIndex, itemIndex);
-            } else {
-                removeFailItem(checkIndex, itemIndex);
-            }
+            if(status === 'fail') addFailItem(checkIndex, itemIndex);
+            else removeFailItem(checkIndex, itemIndex);
         }
 
         function toggleSimpleResult(checkIndex, itemIndex, btn) {
@@ -446,15 +555,16 @@
 
         function addFailItem(checkIndex, itemIndex) {
             const resObj = currentInspection.checkResults[checkIndex];
-            if(!resObj.failedItems.some(f => f.itemNumber === itemIndex + 1)) {
-                resObj.failedItems.push({ itemNumber: itemIndex + 1, description: '', photo: '' });
+            if(!resObj.failedItems.some(f => f.itemIndex === itemIndex)) {
+                const actualSampleNum = previouslyCompleted + itemIndex + 1;
+                resObj.failedItems.push({ itemIndex: itemIndex, itemNumber: actualSampleNum, description: '', photo: '' });
                 renderFailPanels(checkIndex);
             }
         }
 
         function removeFailItem(checkIndex, itemIndex) {
             const resObj = currentInspection.checkResults[checkIndex];
-            resObj.failedItems = resObj.failedItems.filter(f => f.itemNumber !== itemIndex + 1);
+            resObj.failedItems = resObj.failedItems.filter(f => f.itemIndex !== itemIndex);
             renderFailPanels(checkIndex);
         }
 
@@ -463,42 +573,40 @@
             const resObj = currentInspection.checkResults[checkIndex];
             container.innerHTML = '';
             
-            resObj.failedItems.sort((a,b) => a.itemNumber - b.itemNumber).forEach(fail => {
+            resObj.failedItems.sort((a,b) => a.itemIndex - b.itemIndex).forEach(fail => {
                 const panel = document.createElement('div');
                 panel.className = 'fail-panel';
                 panel.innerHTML = `
-                    <div class="fail-title">Item ${fail.itemNumber} - Defect Details</div>
+                    <div class="fail-title">Sample #${fail.itemNumber} - Defect Details</div>
                     <input type="text" placeholder="Enter reason for failure (e.g., length out of tolerance)" 
                            value="${fail.description}" 
-                           onchange="updateFailDesc(${checkIndex}, ${fail.itemNumber}, this.value)">
+                           onchange="updateFailDesc(${checkIndex}, ${fail.itemIndex}, this.value)">
                     <div>
                         <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Upload Photo (Optional)</label>
-                        <input type="file" accept="image/*" id="fail-photo-${checkIndex}-${fail.itemNumber}" 
-                               onchange="processFailPhoto(${checkIndex}, ${fail.itemNumber})">
-                        <img id="photo-preview-${checkIndex}-${fail.itemNumber}" class="fail-photo-preview" src="${fail.photo}">
+                        <input type="file" accept="image/*" id="fail-photo-${checkIndex}-${fail.itemIndex}" 
+                               onchange="processFailPhoto(${checkIndex}, ${fail.itemIndex})">
+                        <img id="photo-preview-${checkIndex}-${fail.itemIndex}" class="fail-photo-preview" src="${fail.photo}">
                     </div>
                 `;
                 container.appendChild(panel);
                 if(fail.photo) {
-                    document.getElementById(`photo-preview-${checkIndex}-${fail.itemNumber}`).style.display = 'block';
+                    document.getElementById(`photo-preview-${checkIndex}-${fail.itemIndex}`).style.display = 'block';
                 }
             });
         }
 
-        function updateFailDesc(checkIndex, itemNumber, val) {
-            const failItem = currentInspection.checkResults[checkIndex].failedItems.find(f => f.itemNumber === itemNumber);
+        function updateFailDesc(checkIndex, itemIndex, val) {
+            const failItem = currentInspection.checkResults[checkIndex].failedItems.find(f => f.itemIndex === itemIndex);
             if(failItem) failItem.description = val;
         }
 
-        // Canvas Compressor for Photo Uploads
-        function processFailPhoto(checkIndex, itemNumber) {
-            const input = document.getElementById(`fail-photo-${checkIndex}-${itemNumber}`);
-            const preview = document.getElementById(`photo-preview-${checkIndex}-${itemNumber}`);
+        function processFailPhoto(checkIndex, itemIndex) {
+            const input = document.getElementById(`fail-photo-${checkIndex}-${itemIndex}`);
+            const preview = document.getElementById(`photo-preview-${checkIndex}-${itemIndex}`);
             
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
                     const img = new Image();
                     img.onload = function() {
@@ -507,15 +615,9 @@
                         const MAX_HEIGHT = 800;
                         let width = img.width;
                         let height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                        } else {
-                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
+                        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
@@ -523,7 +625,7 @@
                         preview.src = compressedDataUrl;
                         preview.style.display = 'block';
                         
-                        const failItem = currentInspection.checkResults[checkIndex].failedItems.find(f => f.itemNumber === itemNumber);
+                        const failItem = currentInspection.checkResults[checkIndex].failedItems.find(f => f.itemIndex === itemIndex);
                         if(failItem) failItem.photo = compressedDataUrl;
                     };
                     img.src = e.target.result;
@@ -533,30 +635,26 @@
         }
 
         async function submitInspection() {
-            if(!globalScriptUrl) { 
-                alert('Admin must configure the Apps Script URL in Settings (⚙️) first.'); 
-                return; 
-            }
-
-            const batchQtyVal = document.getElementById('batch-qty').value;
-            if(!batchQtyVal || batchQtyVal <= 0) {
-                alert("Please enter a valid Batch Quantity.");
-                return;
-            }
+            if(!globalScriptUrl) { alert('Admin must configure the Apps Script URL in Settings (⚙️) first.'); return; }
+            
+            const qtyCheckingNow = parseInt(document.getElementById('sample-size').value) || 0;
+            if(qtyCheckingNow <= 0) { alert("Please enter the quantity of samples you are checking right now."); return; }
 
             const payload = {
                 scheduleNo: document.getElementById('schedule-no').value,
                 partNo: document.getElementById('part-no').value,
-                batchQty: batchQtyVal,
+                batchQty: document.getElementById('batch-qty').value,
                 inspectionLevel: document.getElementById('inspection-level').options[document.getElementById('inspection-level').selectedIndex].text,
                 station: document.getElementById('station-name').value,
                 inspectorName: document.getElementById('inspector-name').value,
                 operatorName: document.getElementById('operator-name').value,
-                sampleSize: document.getElementById('sample-size').value,
+                sampleSize: totalAQLRequired, // Total required size sent to backend
                 checks: currentInspection.checkResults.map(r => ({
                     id: r.checkData.id,
                     check: r.checkData.check,
                     specification: r.checkData.spec,
+                    checkedQty: r.checkedQty, // How many checked this session
+                    previouslyCompleted: previouslyCompleted, // Send previous count to backend
                     pass: r.results.filter(x => x === 'pass').length,
                     fail: r.results.filter(x => x === 'fail').length,
                     results: r.results,
@@ -569,11 +667,8 @@
             try {
                 await fetch(globalScriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
                 alert('Inspection Submitted Successfully!');
-                
-                // Clear inputs for the next entry
-                document.getElementById('batch-qty').value = '';
-                document.getElementById('sample-size').value = 0;
-                document.getElementById('checks-container').innerHTML = '<p style="color:var(--text-muted); text-align:center; padding: 20px;">Enter a Batch Quantity and select a Station to generate inspection checks.</p>';
+                // Re-fetch progress to update the UI (will increment previouslyCompleted automatically)
+                fetchProgress();
             } catch(err) {
                 alert('Submission error: ' + err);
             } finally {
@@ -581,28 +676,87 @@
             }
         }
 
-        async function lookupSchedule() {
+        // --- NEW: History Log and Direct PDF Generator ---
+        async function loadHistory() {
             if(!globalScriptUrl) return;
-            const schedNo = document.getElementById('schedule-no').value;
-            if(!schedNo) return;
-
+            const tbody = document.querySelector('#history-table tbody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading history...</td></tr>';
+            
             try {
-                const res = await fetch(`${globalScriptUrl}?action=getScheduleSummary&scheduleNo=${encodeURIComponent(schedNo)}`);
+                const res = await fetch(`${globalScriptUrl}?action=getHistory`);
                 const data = await res.json();
-                if(data.exists) {
-                    document.getElementById('part-no').value = data.partNo;
-                    document.getElementById('batch-qty').value = data.batchQty;
-                    // Trigger the auto-calculation when batch qty is loaded from server
-                    calculateAQLSampleSize();
+                
+                if(!data.schedules || data.schedules.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No history found.</td></tr>';
+                    return;
                 }
-            } catch(e) { console.log('Lookup error', e); }
+                
+                tbody.innerHTML = '';
+                data.schedules.forEach(sched => {
+                    let stnHTML = '';
+                    let allComplete = true;
+                    if(sched.stationProgress && sched.stationProgress.length > 0) {
+                        sched.stationProgress.forEach(st => {
+                            const isDone = st.status === 'Complete';
+                            if(!isDone) allComplete = false;
+                            const badgeCls = isDone ? 'badge-complete' : 'badge-progress';
+                            stnHTML += `<span class="badge ${badgeCls}" style="margin-right:5px; margin-bottom:5px; display:inline-block;">${st.station} (${st.samplesInspected}/${st.sampleSize})</span>`;
+                        });
+                    } else {
+                        stnHTML = 'None';
+                        allComplete = false;
+                    }
+
+                    const dt = new Date(sched.lastUpdated).toLocaleString();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${dt}</td>
+                        <td style="font-weight:bold;">${sched.scheduleNo}</td>
+                        <td>${sched.partNo}</td>
+                        <td>${stnHTML}</td>
+                        <td><span class="badge ${allComplete ? 'badge-complete' : 'badge-progress'}">${allComplete ? 'Completed' : 'In Progress'}</span></td>
+                        <td>
+                            <button class="btn btn-info" style="padding: 5px 10px; font-size:12px;" onclick="generateDirectPDF('${sched.scheduleNo}', this)">Get PDF</button>
+                            <div class="pdf-link-container" style="margin-top:5px; font-size:12px;"></div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Failed to load history: ${e.message}</td></tr>`;
+            }
+        }
+
+        async function generateDirectPDF(scheduleNo, btn) {
+            if(!globalScriptUrl) return;
+            btn.textContent = "Generating...";
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch(`${globalScriptUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(scheduleNo)}`);
+                const data = await res.json();
+                
+                const container = btn.nextElementSibling;
+                if(data.pdfUrl) {
+                    btn.textContent = "PDF Ready";
+                    btn.classList.replace('btn-info', 'btn-success');
+                    container.innerHTML = `<a href="${data.pdfUrl}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:underline;">Click here to Download PDF</a>`;
+                    
+                    // Attempt to auto-open, but fallback to the link if blocked
+                    window.open(data.pdfUrl, '_blank');
+                } else {
+                    btn.textContent = "Error";
+                    container.innerHTML = `<span style="color:var(--danger)">${data.error}</span>`;
+                }
+            } catch(e) { 
+                btn.textContent = "Failed";
+                btn.nextElementSibling.innerHTML = `<span style="color:var(--danger)">Failed to reach server.</span>`;
+            }
         }
 
         async function loadDashboardData() {
-            if(!globalScriptUrl) {
-                alert("Configure the URL in settings to view Analytics.");
-                return;
-            }
+            if(!globalScriptUrl) return;
             try {
                 const res = await fetch(`${globalScriptUrl}?action=getDashboardData&period=month`);
                 const data = await res.json();
@@ -611,27 +765,11 @@
                     document.getElementById('dash-sigma').textContent = data.overall.sigma.toFixed(1);
                     document.getElementById('dash-total').textContent = data.overall.totalInspected;
                 }
-            } catch(e) { console.log('Dashboard error', e); }
-        }
-
-        async function generatePDFReport() {
-            if(!globalScriptUrl) { alert('Admin must configure URL first.'); return; }
-            const schedNo = document.getElementById('schedule-no').value;
-            if(!schedNo) { alert('Enter Schedule No.'); return; }
-            
-            try {
-                const res = await fetch(`${globalScriptUrl}?action=generatePDF&scheduleNo=${encodeURIComponent(schedNo)}`);
-                const data = await res.json();
-                if(data.pdfUrl) window.open(data.pdfUrl, '_blank');
-                else alert('Error: ' + data.error);
-            } catch(e) { alert('PDF Generation failed: ' + e); }
+            } catch(e) {}
         }
 
         window.onload = function() {
-            // Check if settings exist, otherwise open modal immediately
-            if (!globalScriptUrl) {
-                openSettings();
-            }
+            if (!globalScriptUrl) openSettings();
         };
     </script>
 </body>
